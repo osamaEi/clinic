@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --app-font: 'Tajawal'; }
+html { scroll-behavior: smooth; }
+body { font-feature-settings: "tnum"; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #C3D2DE; border-radius: 99px; }
+::-webkit-scrollbar-track { background: transparent; }
+.navlink.active { background: #12405F; color: #fff; }
+.navlink.active .bar { opacity: 1; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 2px solid #0F6F8C; outline-offset: 2px;
+}
+.field { width: 100%; border: 1px solid #DCE6EE; border-radius: 10px; padding: .6rem .8rem; background: #fff; font-size: .9rem; color: #0B2239; }
+.field:focus { border-color: #0F6F8C; }
+.lbl { display: block; font-size: .78rem; color: #5B7185; margin-bottom: .35rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .fade { animation: fade .22s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+}
+#printArea { display: none; }
+@media print {
+  body * { visibility: hidden; }
+  #printArea, #printArea * { visibility: visible; }
+  #printArea { display: block; position: absolute; inset: 0; padding: 0; }
+}

@@ -1,0 +1,2984 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عيادتي — نظام إدارة العيادة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="fontLink" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app/app.css">
+<link rel="manifest" href="/app/manifest.webmanifest">
+<link rel="icon" href="/app/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/app/icons/icon-192.png">
+<meta name="theme-color" content="#0A2E45">
+<script src="/app/sync.js"></script>
+</head>
+<body class="bg-canvas text-ink font-sans antialiased">
+
+<!-- ══════════ شاشة الدخول ══════════ -->
+<section id="login" class="min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
+  <div class="relative bg-deep text-white p-10 lg:p-16 flex flex-col justify-between overflow-hidden">
+    <div class="absolute -left-24 -top-24 w-96 h-96 rounded-full bg-primary/25 blur-3xl"></div>
+    <div class="absolute -right-16 bottom-0 w-80 h-80 rounded-full bg-mint/15 blur-3xl"></div>
+    <div class="relative flex items-center gap-3">
+      <div class="w-11 h-11 rounded-xl2 bg-white/10 grid place-items-center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-6 h-6"><path d="M8 3v4M16 3v4M6 7h12a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2Z"/><path d="M12 11v6M9 14h6"/></svg>
+      </div>
+      <div>
+        <p class="font-semibold text-lg leading-tight">عيادة الوفاء</p>
+        <p class="text-white/60 text-sm">باطنة وجهاز هضمي</p>
+      </div>
+    </div>
+
+    <div class="relative max-w-md">
+      <h1 class="text-3xl lg:text-[2.6rem] font-bold leading-[1.25]">كل مواعيد العيادة<br>وملفات المرضى في مكان واحد.</h1>
+      <p class="text-white/65 mt-4 leading-relaxed text-[.95rem]">التمريض يسجل بيانات المرضى ويجهز الزيارة، والدكتور يكشف ويكتب الروشتة. الملف الطبي بيتحدّث لحظياً للطرفين.</p>
+      <div class="mt-10 grid grid-cols-3 gap-4 max-w-sm">
+        <div><p class="text-2xl font-bold num">٤</p><p class="text-white/55 text-xs mt-1">شاشات للسكرتيرة</p></div>
+        <div><p class="text-2xl font-bold num">٦</p><p class="text-white/55 text-xs mt-1">شاشات للدكتور</p></div>
+        <div><p class="text-2xl font-bold num">١</p><p class="text-white/55 text-xs mt-1">قاعدة بيانات</p></div>
+      </div>
+    </div>
+    <p class="relative text-white/40 text-xs">بيشتغل من غير نت — وكل حاجة بتتزامن أول ما النت يرجع.</p>
+  </div>
+
+  <div class="grid place-items-center p-8 lg:p-14">
+    <div class="w-full max-w-sm">
+      <p id="authNotice" class="hidden mb-6 text-sm bg-amber/10 text-amber rounded-xl2 p-3 leading-relaxed"></p>
+
+      <div id="authLogin">
+        <h2 class="text-2xl font-bold">تسجيل الدخول</h2>
+        <p class="text-muted text-sm mt-2">ادخل بحسابك على العيادة — دكتور أو تمريض أو استقبال.</p>
+        <form onsubmit="doLogin(event)" class="mt-8 space-y-4">
+          <div><label class="lbl" for="liEmail">البريد الإلكتروني</label>
+            <input id="liEmail" type="email" required autocomplete="username" dir="ltr" class="field"></div>
+          <div><label class="lbl" for="liPass">كلمة السر</label>
+            <input id="liPass" type="password" required autocomplete="current-password" dir="ltr" class="field"></div>
+          <p id="liErr" class="hidden text-sm text-rose bg-rose/5 rounded-lg p-2.5"></p>
+          <button id="liBtn" class="w-full bg-primary hover:bg-primaryd text-white font-medium py-3 rounded-xl2 transition">دخول</button>
+        </form>
+        <p class="text-sm text-muted mt-6">عيادة جديدة؟
+          <a href="#register" onclick="showAuth('register')" class="text-primary font-medium hover:underline">سجّل عيادتك — تجربة ١٤ يوم مجاناً</a></p>
+      </div>
+
+      <div id="authRegister" class="hidden">
+        <h2 class="text-2xl font-bold">سجّل عيادتك</h2>
+        <p class="text-muted text-sm mt-2">حسابك هيبقى حساب صاحب العيادة، وتقدر تضيف التمريض والاستقبال بعدين.</p>
+        <form onsubmit="doRegister(event)" class="mt-6 grid grid-cols-2 gap-3">
+          <div class="col-span-2"><label class="lbl" for="rgClinic">اسم العيادة</label>
+            <input id="rgClinic" required class="field" placeholder="عيادة الشفاء"></div>
+          <div><label class="lbl" for="rgSpec">التخصص</label><input id="rgSpec" class="field" placeholder="باطنة"></div>
+          <div><label class="lbl" for="rgPhone">تليفون العيادة</label><input id="rgPhone" class="field num" dir="ltr"></div>
+          <div class="col-span-2"><label class="lbl" for="rgName">اسم الطبيب</label>
+            <input id="rgName" required class="field" placeholder="د. ..."></div>
+          <div class="col-span-2"><label class="lbl" for="rgEmail">البريد الإلكتروني</label>
+            <input id="rgEmail" type="email" required autocomplete="username" dir="ltr" class="field"></div>
+          <div><label class="lbl" for="rgPass">كلمة السر</label>
+            <input id="rgPass" type="password" required minlength="8" autocomplete="new-password" dir="ltr" class="field"></div>
+          <div><label class="lbl" for="rgPlan">الباقة</label><select id="rgPlan" class="field"></select></div>
+          <p id="rgErr" class="hidden col-span-2 text-sm text-rose bg-rose/5 rounded-lg p-2.5"></p>
+          <button id="rgBtn" class="col-span-2 bg-primary hover:bg-primaryd text-white font-medium py-3 rounded-xl2 transition">ابدأ التجربة المجانية</button>
+        </form>
+        <p class="text-sm text-muted mt-6">عندك حساب؟
+          <a href="#login" onclick="showAuth('login')" class="text-primary font-medium hover:underline">ادخل</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- تاب تانية فاتحة التطبيق -->
+<div id="dormant" class="hidden fixed inset-0 z-[80] bg-deep/95 text-white grid place-items-center p-6 text-center">
+  <div class="max-w-sm">
+    <p class="text-xl font-bold">التطبيق مفتوح في تاب تانية</p>
+    <p class="text-white/65 text-sm mt-3 leading-relaxed">عشان البيانات متتلخبطش، التطبيق بيشتغل في تاب واحدة بس في نفس الوقت.</p>
+    <button onclick="location.reload()" class="mt-6 bg-white text-deep font-medium px-5 py-2.5 rounded-xl2">استخدمه هنا</button>
+  </div>
+</div>
+
+<!-- ══════════ التطبيق ══════════ -->
+<div id="app" class="hidden min-h-screen">
+  <!-- الشريط الجانبي -->
+  <aside id="sidebar" class="fixed inset-y-0 right-0 w-[260px] bg-deep text-white z-40 flex flex-col translate-x-full lg:translate-x-0 transition-transform">
+    <div class="p-5 border-b border-white/10 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl2 bg-white/10 grid place-items-center shrink-0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5"><path d="M8 3v4M16 3v4M6 7h12a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2Z"/><path d="M12 11v6M9 14h6"/></svg>
+      </div>
+      <div class="min-w-0">
+        <p class="font-semibold leading-tight truncate" id="sbClinic">عيادة الوفاء</p>
+        <p class="text-white/50 text-xs truncate">باطنة وجهاز هضمي</p>
+      </div>
+      <button onclick="toggleSidebar()" class="lg:hidden mr-auto text-white/60 hover:text-white">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <nav id="nav" class="p-3 space-y-1 flex-1 overflow-y-auto"></nav>
+
+    <div class="px-3 pb-2">
+      <button onclick="manualSync()" title="مزامنة الآن" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl2 bg-white/5 hover:bg-white/10 text-right transition">
+        <span id="syncDot" class="w-2 h-2 rounded-full bg-mint shrink-0"></span>
+        <span class="min-w-0 flex-1">
+          <span id="syncText" class="block text-xs text-white/85 truncate">متزامن</span>
+          <span id="syncSub" class="block text-[.68rem] text-white/45 truncate"></span>
+        </span>
+        <svg id="syncIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-4 h-4 text-white/50 shrink-0"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2"/><path d="M21 4v5h-5M3 20v-5h5"/></svg>
+      </button>
+    </div>
+
+    <div class="p-3 border-t border-white/10">
+      <div class="flex items-center gap-3 p-2">
+        <div id="sbAvatar" class="w-9 h-9 rounded-full bg-primary grid place-items-center text-sm font-semibold shrink-0"></div>
+        <div class="min-w-0 flex-1">
+          <p id="sbUser" class="text-sm font-medium truncate"></p>
+          <p id="sbRole" class="text-xs text-white/50 truncate"></p>
+        </div>
+        <button onclick="signOut()" title="خروج" class="text-white/50 hover:text-white p-1.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-ink/40 z-30 hidden lg:hidden"></div>
+
+  <!-- المحتوى -->
+  <div class="lg:mr-[260px] min-h-screen flex flex-col">
+    <header class="sticky top-0 z-20 bg-canvas/85 backdrop-blur border-b border-line">
+      <div class="px-4 lg:px-8 h-16 flex items-center gap-4">
+        <button onclick="toggleSidebar()" class="lg:hidden p-2 -mr-2 text-muted">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="min-w-0">
+          <h1 id="pageTitle" class="font-semibold text-lg leading-tight truncate">لوحة التحكم</h1>
+          <p id="pageDate" class="text-muted text-xs"></p>
+        </div>
+        <div class="mr-auto flex items-center gap-2">
+          <div class="relative hidden md:block">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="globalSearch" oninput="globalSearch(this.value)" placeholder="ابحث باسم المريض أو رقم التليفون"
+                   class="w-64 bg-white border border-line rounded-xl2 py-2 pr-9 pl-3 text-sm placeholder:text-muted/70">
+          </div>
+          <button id="nextBtn" onclick="nextPatient()" class="hidden bg-deep hover:bg-ink text-white text-sm font-medium rounded-xl2 px-4 py-2.5 items-center gap-2 transition">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><circle cx="10" cy="8" r="3.2"/><path d="M4 20a6 6 0 0 1 11-3.3M17 14l-3 3 3 3M14 17h7"/></svg>
+            <span class="hidden sm:inline">المريض التالي</span>
+            <span id="nextCount" class="num text-xs bg-white/15 rounded-full px-1.5 min-w-[1.25rem] text-center">0</span>
+          </button>
+          <button onclick="quickAdd()" class="bg-primary hover:bg-primaryd text-white text-sm font-medium rounded-xl2 px-4 py-2.5 flex items-center gap-2 transition">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M12 5v14M5 12h14"/></svg>
+            <span id="quickAddLabel" class="hidden sm:inline">موعد جديد</span>
+          </button>
+        </div>
+      </div>
+      <div id="searchResults" class="hidden absolute left-8 top-16 w-80 bg-white border border-line rounded-xl2 shadow-pop overflow-hidden"></div>
+    </header>
+
+    <div id="subBanner" class="hidden"></div>
+    <main id="view" class="p-4 lg:p-8 flex-1"></main>
+  </div>
+</div>
+
+<!-- المودال -->
+<div id="modal" class="hidden fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-ink/50 backdrop-blur-sm" onclick="closeModal()"></div>
+  <div class="absolute inset-0 overflow-y-auto p-4 grid place-items-center">
+    <div id="modalBox" class="relative bg-white rounded-xl2 shadow-pop w-full max-w-lg fade"></div>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-6 left-6 z-[60] space-y-2"></div>
+<div id="printArea"></div>
+
+<script>
+/* ═══════════════ البيانات ═══════════════ */
+let TODAY = new Date();
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+
+/* البيانات بتتحمّل من الجهاز (IndexedDB) وبتتزامن مع السيرفر — شوف sync.js */
+const DB = {
+  clinic: { name:'', spec:'', doctor:'', phone:'', address:'', open:'10:00', close:'22:00' },
+  fees: { 'كشف':300, 'استشارة':200, 'متابعة':150 },
+  patients: [], appts: [], records: [], treatments: [], files: [], drugs: [], labs: [],
+};
+
+/* ═══════════════ الخطوط ═══════════════ */
+const FONTS = ['Tajawal','Almarai','Cairo','Noto Kufi Arabic','Alexandria','Rubik'];
+const FONT_WEIGHTS = { 'Tajawal':'300;400;500;700;800', 'Almarai':'300;400;700;800',
+  'Cairo':'300;400;500;600;700;800', 'Noto Kufi Arabic':'300;400;500;600;700',
+  'Alexandria':'300;400;500;600;700', 'Rubik':'300;400;500;600;700' };
+let FONT_NAME = 'Tajawal', FONT = "'Tajawal'";
+
+function setFont(name, silent){
+  if (!FONT_WEIGHTS[name]) return;
+  FONT_NAME = name; FONT = `'${name}'`;
+  $('#fontLink').href = `https://fonts.googleapis.com/css2?family=${name.replace(/ /g,'+')}:wght@${FONT_WEIGHTS[name]}&display=swap`;
+  document.documentElement.style.setProperty('--app-font', FONT);
+  try { localStorage.setItem('clinic-font', name); } catch {}
+  if (silent) return;
+  if (PAGE) go(PAGE);
+  toast('الخط اتغيّر لـ ' + name);
+}
+
+let ROLE = 'doctor', PAGE = 'dashboard';
+
+/* ═══════════════ أدوات ═══════════════ */
+const $ = s => document.querySelector(s);
+const patient = id => DB.patients.find(p => p.id === id) || {name:'—', phone:'', age:''};
+const initials = n => n.trim().split(' ').slice(0,2).map(w=>w[0]).join('');
+const money = n => Number(n).toLocaleString('ar-EG');
+const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function fmtTime(t){
+  const [h,m] = t.split(':').map(Number);
+  const ap = h >= 12 ? 'م' : 'ص';
+  const hh = h % 12 === 0 ? 12 : h % 12;
+  return `${hh}:${String(m).padStart(2,'0')} ${ap}`;
+}
+function fmtDate(d){
+  return new Date(d+'T00:00:00').toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function fmtShort(d){
+  return new Date(d+'T00:00:00').toLocaleDateString('ar-EG',{day:'numeric',month:'short',year:'numeric'});
+}
+
+const STATUS = {
+  'محجوز':      'bg-primary/10 text-primary',
+  'في الانتظار':'bg-amber/10 text-amber',
+  'عند الدكتور':'bg-deep/10 text-deep',
+  'تم الكشف':   'bg-mint/10 text-mint',
+  'ملغي':       'bg-rose/10 text-rose',
+};
+const badge = s => `<span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS[s]||'bg-line text-muted'}">
+  <span class="w-1.5 h-1.5 rounded-full bg-current"></span>${s}</span>`;
+
+function avatar(name, size='w-9 h-9', tone='bg-primary/10 text-primary'){
+  return `<span class="${size} ${tone} rounded-full grid place-items-center text-xs font-semibold shrink-0">${esc(initials(name))}</span>`;
+}
+
+function toast(msg, kind='ok'){
+  if (kind!=='err') persistData();
+  const c = kind==='ok' ? 'bg-mint' : kind==='warn' ? 'bg-amber' : 'bg-rose';
+  const el = document.createElement('div');
+  el.className = `${c} text-white text-sm px-4 py-3 rounded-xl2 shadow-pop fade flex items-center gap-2`;
+  el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="w-4 h-4"><path d="m5 12 5 5L20 7"/></svg>${esc(msg)}`;
+  $('#toast').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 2600);
+}
+
+/* ═══════════════ التنقل ═══════════════ */
+const ICON = {
+  dashboard:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  appts:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+  patients:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 7.5a3 3 0 0 1 0 5M18 20a5.5 5.5 0 0 0-2-4"/>',
+  records:'<path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  billing:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  reports:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H2a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1.1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V2a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H22a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1"/>',
+  queue:'<path d="M4 6h16M4 12h10M4 18h7"/><circle cx="19" cy="16" r="3"/>',
+};
+const NAV = {
+  nurse: [['patients','البحث وتسجيل بيانات المرضى','patients'],['queue','لوحة الانتظار','queue'],['billing','التحصيل','billing']],
+  doctor: [
+    ['dashboard','لوحة التحكم','dashboard'],
+    ['queue','لوحة الانتظار','queue'],
+    ['appts','المواعيد','appts'],
+    ['billing','التحصيل','billing'],
+    ['patients','ملفات المرضى','patients'],
+
+    ['settings','الإعدادات','settings'],
+  ],
+  secretary: [
+    ['dashboard','لوحة الاستقبال','dashboard'],
+    ['queue','لوحة الانتظار','queue'],
+    ['appts','حجز المواعيد','appts'],
+    ['patients','سجل المرضى','patients'],
+    ['billing','التحصيل والفواتير','billing'],
+
+    ['settings','الإعدادات','settings'],
+  ]
+};
+
+const ROLE_LABEL = { doctor:'طبيب', nurse:'تمريض', secretary:'استقبال' };
+
+/** Open the app for the account cached by Sync (works offline after the first login). */
+function signIn(){
+  const { user } = Sync.account;
+  ROLE = user.role;
+  $('#login').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  const isDoc = ROLE==='doctor';
+  $('#sbUser').textContent = user.name;
+  $('#sbRole').textContent = ROLE_LABEL[ROLE] + (user.isOwner ? ' · صاحب العيادة' : '');
+  $('#sbAvatar').textContent = initials(user.name);
+  $('#sbAvatar').className = `w-9 h-9 rounded-full grid place-items-center text-sm font-semibold shrink-0 ${isDoc?'bg-primary':ROLE==='nurse'?'bg-mint':'bg-amber'}`;
+  $('#sbClinic').textContent = DB.clinic.name || Sync.account.clinic.name;
+  $('#quickAddLabel').textContent = isDoc ? 'كشف جديد' : 'بحث عن مريض';
+  renderBanner();
+  buildNav();
+  if (!routeFromHash()) go(defaultPage());
+}
+async function signOut(){
+  const pendingN = Sync.pendingCount();
+  if (pendingN && !confirm(`فيه ${pendingN} تغيير لسه ما اترفعش على السيرفر${Sync.status.online?'':' (مفيش نت)'}.\nلو خرجت دلوقتي هيضيعوا. تخرج برضه؟`)) return;
+  await Sync.logout(true);
+  location.hash = '';
+  location.reload();
+}
+
+function buildNav(){
+  $('#nav').innerHTML = NAV[ROLE].map(([key,label,ic]) => `
+    <a href="#/${key}" onclick="event.preventDefault();go('${key}')" data-nav="${key}"
+      class="navlink w-full flex items-center gap-3 px-3 py-2.5 rounded-xl2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition text-right">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-[18px] h-[18px] shrink-0">${ICON[ic]}</svg>
+      <span>${label}</span>
+      <span class="bar opacity-0 mr-auto w-1.5 h-1.5 rounded-full bg-mint"></span>
+    </a>`).join('');
+}
+
+function go(page){
+  TODAY = new Date();
+  if (page==='records' || page==='reports') page='patients';
+  if (ROLE==='nurse' && !['patients','patient','queue','billing'].includes(page)) page='patients';
+  if (page==='exam' && (ROLE!=='doctor' || !CURRENT_PID)) page='queue';
+  PAGE = page;
+  const navKey = page==='patient' ? 'patients' : page==='exam' ? 'queue' : page;
+  document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav===navKey));
+  const item = NAV[ROLE].find(n=>n[0]===navKey);
+  $('#pageTitle').textContent = page==='patient' ? patient(CURRENT_PID).name
+    : page==='exam' ? 'كشف — ' + patient(CURRENT_PID).name : (item ? item[1] : '');
+  $('#pageDate').textContent = page==='patient' ? 'الملف الطبي الكامل' : page==='exam' ? 'شاشة الكشف' : fmtDate(iso(TODAY));
+  const R = { dashboard: ROLE==='doctor'?docDash:secDash, appts:apptsPage, patients:patientsPage,
+              records:recordsPage, billing:billingPage, reports:reportsPage, settings:settingsPage,
+              patient:ROLE==='nurse'?nursePatientPage:patientPage, queue:queuePage, exam:examPage };
+  $('#view').innerHTML = `<div class="fade">${(R[page]||docDash)()}</div>`;
+  if (page==='exam') { renderRx(); renderPending(); renderLabChips(); }
+  if (page==='settings') { loadTeam(); renderRxPreview(); }
+  updateNextBtn();
+  KNOWN_WAITING = new Set(waitingQueue().map(a=>a.id));
+  window.scrollTo({top:0, behavior:'instant'});
+  $('#view').scrollTop = 0;
+  if (window.innerWidth < 1024) closeSidebar();
+  syncHash();
+}
+
+/* ── روابط الصفحات: كل صفحة وكل قسم ليه لينك خاص (#/...) — الرجوع والتحديث شغالين ── */
+const defaultPage = () => ROLE==='nurse' ? 'patients' : 'dashboard';
+function pageHash(){
+  if (PAGE==='patient') return `#/patient/${CURRENT_PID}${pTab!=='overview' ? '/' + pTab : ''}`;
+  if (PAGE==='exam') return `#/exam/${CURRENT_PID}`;
+  if (PAGE==='settings') return `#/settings/${SET_TAB}`;
+  return '#/' + PAGE;
+}
+function syncHash(){
+  const h = pageHash();
+  if (location.hash !== h) history.pushState(null, '', h);
+}
+/** يفتح الصفحة اللي في اللينك. بيرجع false لو اللينك مش صفحة معروفة. */
+function routeFromHash(){
+  if (!location.hash.startsWith('#/')) return false;
+  const [page, id, tab] = location.hash.slice(2).split('/').map(decodeURIComponent);
+  const pid = Number(id), known = DB.patients.some(p=>p.id===pid);
+  closeModal();
+  if (page==='patient' && known) { CURRENT_PID = pid; pTab = tab || 'overview'; go('patient'); }
+  else if (page==='exam' && known) { if (!(PAGE==='exam' && CURRENT_PID===pid)) startExam(pid); }
+  else if (page==='settings') { SET_TAB = id || 'clinic'; go('settings'); }
+  else if (NAV[ROLE].some(n=>n[0]===page)) go(page);
+  else return false;
+  return true;
+}
+window.addEventListener('popstate', () => {
+  if ($('#app').classList.contains('hidden') || !location.hash.startsWith('#/')) return;
+  if (examDirty() && !confirm('الكشف الحالي لسه ما اتحفظش. تسيبه؟')) { history.pushState(null, '', pageHash()); return; }
+  if (!routeFromHash()) go(defaultPage());
+});
+
+function toggleSidebar(){
+  const sb = $('#sidebar'), ov = $('#overlay');
+  const open = !sb.classList.contains('translate-x-full');
+  if (open) closeSidebar(); else { sb.classList.remove('translate-x-full'); ov.classList.remove('hidden'); }
+}
+function closeSidebar(){ $('#sidebar').classList.add('translate-x-full'); $('#overlay').classList.add('hidden'); }
+
+/* ═══════════════ حسابات ═══════════════ */
+const todayAppts = () => DB.appts.filter(a=>a.date===iso(TODAY) && a.status!=='ملغي')
+                                 .sort((a,b)=>a.time.localeCompare(b.time));
+const stats = () => {
+  const t = todayAppts();
+  return {
+    booked: t.length,
+    done:   t.filter(a=>a.status==='تم الكشف').length,
+    waiting:t.filter(a=>a.status==='في الانتظار').length,
+    revenue:t.filter(a=>a.paid).reduce((s,a)=>s+a.fee,0),
+    unpaid: t.filter(a=>!a.paid).reduce((s,a)=>s+a.fee,0),
+  };
+};
+
+/* ═══════════════ عناصر مشتركة ═══════════════ */
+function statCard(label, value, sub, icon, tone){
+  return `<div class="bg-white border border-line rounded-xl2 p-5 shadow-card">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-3xl font-bold num leading-none">${value}</p>
+        <p class="text-sm text-ink mt-2 font-medium">${label}</p>
+        <p class="text-xs text-muted mt-0.5">${sub}</p>
+      </div>
+      <span class="w-10 h-10 rounded-xl2 ${tone} grid place-items-center shrink-0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-5 h-5">${ICON[icon]}</svg>
+      </span>
+    </div>
+  </div>`;
+}
+
+function apptRow(a, mode){
+  const p = patient(a.pid);
+  const acts = mode==='doctor'
+    ? `${['في الانتظار','عند الدكتور'].includes(a.status) ? `<button onclick="startVisit(${a.id})" class="text-xs font-medium bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primaryd">${a.status==='عند الدكتور'?'كمّل الكشف':'ابدأ الكشف'}</button>` : ''}
+       <button onclick="openFile(${p.id})" class="text-xs font-medium border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary">الملف</button>`
+    : `${a.status==='محجوز' ? `<button onclick="checkIn(${a.id})" class="text-xs font-medium bg-mint text-white px-3 py-1.5 rounded-lg hover:opacity-90">وصل المريض</button>` : ''}
+       ${!a.paid ? `<button onclick="payModal(${a.id})" class="text-xs font-medium border border-amber text-amber px-3 py-1.5 rounded-lg hover:bg-amber/5">تحصيل</button>` : ''}
+       <button onclick="cancelAppt(${a.id})" class="text-xs font-medium border border-line px-3 py-1.5 rounded-lg hover:border-rose hover:text-rose">إلغاء</button>`;
+  return `<tr class="border-t border-line hover:bg-canvas/60 transition">
+    <td class="py-3 px-4">
+      <div class="flex items-center gap-3">${avatar(p.name)}
+        <div class="min-w-0"><p class="font-medium text-sm truncate">${esc(p.name)}</p>
+        <p class="text-xs text-muted num">${esc(p.phone)}</p></div>
+      </div>
+    </td>
+    <td class="py-3 px-4 num text-sm whitespace-nowrap">${fmtTime(a.time)}</td>
+    <td class="py-3 px-4 text-sm text-muted">${a.type}</td>
+    <td class="py-3 px-4">${badge(a.status)}</td>
+    <td class="py-3 px-4 num text-sm whitespace-nowrap">${money(a.fee)} <span class="text-muted text-xs">ج</span>
+      ${a.paid?'<span class="text-mint text-xs mr-1">مدفوع</span>':'<span class="text-rose text-xs mr-1">غير مدفوع</span>'}</td>
+    <td class="py-3 px-4"><div class="flex gap-2 justify-end">${acts}</div></td>
+  </tr>`;
+}
+
+function table(headers, rows, empty){
+  if (!rows) return `<div class="p-12 text-center">
+      <p class="text-muted text-sm">${empty}</p></div>`;
+  return `<div class="overflow-x-auto"><table class="w-full text-right">
+    <thead><tr class="bg-canvas/70 text-xs text-muted">
+      ${headers.map(h=>`<th class="py-2.5 px-4 font-medium">${h}</th>`).join('')}
+    </tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* ═══════════════ لوحة الطبيب ═══════════════ */
+function docDash(){
+  const s = stats(), t = todayAppts();
+  const current = t.find(a=>a.status==='عند الدكتور') || waitingQueue()[0] || t.find(a=>a.status==='محجوز');
+  const p = current ? patient(current.pid) : null;
+  const next = t.filter(a=>a.status==='محجوز').slice(0,3);
+
+  return `
+  <div class="grid xl:grid-cols-[1fr_320px] gap-6">
+    <div class="space-y-6">
+      <!-- المريض الحالي -->
+      <div class="bg-deep text-white rounded-xl2 p-6 relative overflow-hidden">
+        <div class="absolute -left-20 -top-20 w-64 h-64 rounded-full bg-primary/25 blur-3xl"></div>
+        <div class="relative flex flex-wrap items-center gap-5">
+          <div class="text-center border-l border-white/15 pl-5">
+            <p class="text-white/50 text-xs mb-1">الدور</p>
+            <p class="text-4xl font-bold num">${t.filter(a=>a.status==='تم الكشف').length + 1}</p>
+          </div>
+          <div class="flex-1 min-w-[200px]">
+            <p class="text-white/50 text-xs">${current ? 'المريض التالي في الكشف' : 'مفيش حد في الانتظار'}</p>
+            <p class="text-2xl font-semibold mt-1">${p ? esc(p.name) : 'العيادة فاضية دلوقتي'}</p>
+            ${p ? `<p class="text-white/60 text-sm mt-1">${p.age} سنة · ${p.gender} · ${esc(p.chronic)} · موعد ${fmtTime(current.time)}</p>` : ''}
+          </div>
+          ${current ? `<div class="flex gap-2">
+            <button onclick="startVisit(${current.id})" class="bg-white text-deep font-medium text-sm px-5 py-2.5 rounded-xl2 hover:bg-white/90">ابدأ الكشف</button>
+            <button onclick="openFile(${p.id})" class="border border-white/25 text-white text-sm px-4 py-2.5 rounded-xl2 hover:bg-white/10">افتح الملف</button>
+          </div>` : ''}
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        ${statCard('حجوزات اليوم', s.booked, 'مواعيد مؤكدة', 'appts', 'bg-primary/10 text-primary')}
+        ${statCard('تم الكشف', s.done, 'حالة خلصت', 'patients', 'bg-mint/10 text-mint')}
+        ${statCard('في الانتظار', s.waiting, 'داخل العيادة', 'queue', 'bg-amber/10 text-amber')}
+        ${statCard('إيراد اليوم', money(s.revenue), 'محصّل فعلياً', 'billing', 'bg-primary/10 text-primary')}
+      </div>
+
+      <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+        <div class="p-5 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 class="font-semibold">مواعيد اليوم</h2>
+            <p class="text-muted text-xs mt-0.5">${fmtDate(iso(TODAY))}</p>
+          </div>
+          <button onclick="go('appts')" class="text-sm text-primary font-medium hover:underline">كل المواعيد</button>
+        </div>
+        ${table(['اسم المريض','الوقت','نوع الزيارة','الحالة','الرسوم',''],
+          t.map(a=>apptRow(a,'doctor')).join(''), 'مفيش مواعيد محجوزة النهارده.')}
+      </section>
+    </div>
+
+    <div class="space-y-6">
+      <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+        <div class="p-5 border-b border-line"><h2 class="font-semibold">تنبيهات</h2></div>
+        <div class="divide-y divide-line">
+          ${buildAlerts().map(al=>`
+            <div class="p-4 flex gap-3">
+              <span class="w-9 h-9 rounded-xl2 grid place-items-center shrink-0 ${al.kind==='lab'?'bg-primary/10 text-primary':al.kind==='late'?'bg-rose/10 text-rose':'bg-amber/10 text-amber'}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-4 h-4">
+                  ${al.kind==='lab'?'<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/>':al.kind==='late'?'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>':ICON.appts}
+                </svg>
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium">${esc(al.t)}</p>
+                <p class="text-xs text-muted mt-0.5 leading-relaxed">${esc(al.d)}</p>
+              </div>
+            </div>`).join('')}
+        </div>
+      </section>
+
+      <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+        <div class="p-5 border-b border-line"><h2 class="font-semibold">اللي جاي بعد كده</h2></div>
+        <div class="divide-y divide-line">
+          ${next.length ? next.map(a=>{
+            const q = patient(a.pid);
+            return `<button onclick="openFile(${q.id})" class="w-full text-right p-4 flex items-center gap-3 hover:bg-canvas/60 transition">
+              ${avatar(q.name)}
+              <div class="min-w-0 flex-1"><p class="text-sm font-medium truncate">${esc(q.name)}</p>
+              <p class="text-xs text-muted">${a.type}</p></div>
+              <span class="text-sm num text-muted">${fmtTime(a.time)}</span>
+            </button>`;}).join('')
+          : '<p class="p-6 text-sm text-muted text-center">خلصت مواعيد النهارده.</p>'}
+        </div>
+      </section>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════ لوحة السكرتيرة ═══════════════ */
+function secDash(){
+  const s = stats(), t = todayAppts();
+  const waiting = t.filter(a=>a.status==='في الانتظار');
+  const unpaid = t.filter(a=>!a.paid);
+  return `
+  <div class="space-y-6">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      ${statCard('حجوزات اليوم', s.booked, 'كل الحالات', 'appts', 'bg-primary/10 text-primary')}
+      ${statCard('في غرفة الانتظار', s.waiting, 'مسجّل وصولهم', 'queue', 'bg-amber/10 text-amber')}
+      ${statCard('محصّل اليوم', money(s.revenue), 'كاش وفيزا', 'billing', 'bg-mint/10 text-mint')}
+      ${statCard('مستحق للتحصيل', money(s.unpaid), `${unpaid.length} فاتورة`, 'reports', 'bg-rose/10 text-rose')}
+    </div>
+
+    <div class="grid xl:grid-cols-[1fr_340px] gap-6">
+      <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+        <div class="p-5 flex items-center justify-between flex-wrap gap-3">
+          <div><h2 class="font-semibold">جدول اليوم</h2>
+          <p class="text-muted text-xs mt-0.5">سجّل وصول المريض عشان يظهر عند الدكتور في قايمة الانتظار</p></div>
+          <button onclick="bookModal()" class="text-sm bg-primary text-white px-4 py-2 rounded-xl2 hover:bg-primaryd">حجز موعد</button>
+        </div>
+        ${table(['اسم المريض','الوقت','نوع الزيارة','الحالة','الرسوم',''],
+          t.map(a=>apptRow(a,'sec')).join(''), 'مفيش حجوزات النهارده — ابدأ بحجز موعد.')}
+      </section>
+
+      <div class="space-y-6">
+        <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+          <div class="p-5 border-b border-line flex items-center justify-between">
+            <h2 class="font-semibold">غرفة الانتظار</h2>
+            <span class="text-xs num bg-amber/10 text-amber px-2 py-1 rounded-full">${waiting.length}</span>
+          </div>
+          <div class="divide-y divide-line">
+            ${waiting.length ? waiting.map((a,i)=>{
+              const q = patient(a.pid);
+              return `<div class="p-4 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-lg bg-canvas text-muted grid place-items-center text-xs font-semibold num">${i+1}</span>
+                <div class="min-w-0 flex-1"><p class="text-sm font-medium truncate">${esc(q.name)}</p>
+                <p class="text-xs text-muted">دخل ${fmtTime(a.time)}</p></div>
+                ${a.paid?'<span class="text-xs text-mint">مدفوع</span>':`<button onclick="payModal(${a.id})" class="text-xs text-amber border border-amber/40 px-2.5 py-1 rounded-lg">تحصيل</button>`}
+              </div>`;}).join('')
+            : '<p class="p-6 text-sm text-muted text-center">غرفة الانتظار فاضية.</p>'}
+          </div>
+        </section>
+
+        <section class="bg-white border border-line rounded-xl2 shadow-card p-5">
+          <h2 class="font-semibold mb-4">إجراءات سريعة</h2>
+          <div class="space-y-2">
+            <button onclick="bookModal()" class="w-full text-right px-4 py-3 rounded-xl2 border border-line hover:border-primary hover:text-primary text-sm transition">حجز موعد لمريض موجود</button>
+            <button onclick="patientModal()" class="w-full text-right px-4 py-3 rounded-xl2 border border-line hover:border-primary hover:text-primary text-sm transition">تسجيل مريض جديد</button>
+            <button onclick="go('billing')" class="w-full text-right px-4 py-3 rounded-xl2 border border-line hover:border-primary hover:text-primary text-sm transition">فتح شاشة التحصيل</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════ المواعيد ═══════════════ */
+let apptFilter = { date: iso(TODAY), status: 'الكل' };
+function apptsPage(){
+  const list = DB.appts.filter(a =>
+      (!apptFilter.date || a.date===apptFilter.date) &&
+      (apptFilter.status==='الكل' || a.status===apptFilter.status))
+    .sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+
+  return `
+  <div class="space-y-5">
+    <div class="bg-white border border-line rounded-xl2 shadow-card p-4 flex flex-wrap items-end gap-3">
+      <div><label class="lbl">التاريخ</label>
+        <input type="date" value="${apptFilter.date}" onchange="apptFilter.date=this.value;go('appts')" class="field w-44 num"></div>
+      <div><label class="lbl">الحالة</label>
+        <select onchange="apptFilter.status=this.value;go('appts')" class="field w-40">
+          ${['الكل','محجوز','في الانتظار','عند الدكتور','تم الكشف','ملغي'].map(s=>`<option ${apptFilter.status===s?'selected':''}>${s}</option>`).join('')}
+        </select></div>
+      <button onclick="apptFilter={date:'',status:'الكل'};go('appts')" class="text-sm text-muted hover:text-ink px-3 py-2.5">عرض كل الأيام</button>
+      <button onclick="bookModal()" class="mr-auto bg-primary text-white text-sm px-4 py-2.5 rounded-xl2 hover:bg-primaryd">حجز موعد جديد</button>
+    </div>
+
+    <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+      <div class="p-5 border-b border-line flex items-center justify-between">
+        <h2 class="font-semibold">${apptFilter.date ? fmtDate(apptFilter.date) : 'كل المواعيد'}</h2>
+        <span class="text-xs text-muted num">${list.length} موعد</span>
+      </div>
+      ${table(['اسم المريض','الوقت','نوع الزيارة','الحالة','الرسوم',''],
+        list.map(a=>`<tr class="border-t border-line hover:bg-canvas/60">
+          <td class="py-3 px-4"><div class="flex items-center gap-3">${avatar(patient(a.pid).name)}
+            <div><p class="font-medium text-sm">${esc(patient(a.pid).name)}</p>
+            <p class="text-xs text-muted num">${fmtShort(a.date)}</p></div></div></td>
+          <td class="py-3 px-4 num text-sm">${fmtTime(a.time)}</td>
+          <td class="py-3 px-4 text-sm text-muted">${a.type}</td>
+          <td class="py-3 px-4">${badge(a.status)}</td>
+          <td class="py-3 px-4 num text-sm">${money(a.fee)} <span class="text-muted text-xs">ج</span></td>
+          <td class="py-3 px-4"><div class="flex gap-2 justify-end">
+            ${a.status==='محجوز'?`<button onclick="checkIn(${a.id})" class="text-xs bg-mint text-white px-3 py-1.5 rounded-lg">تسجيل وصول</button>`:''}
+            ${ROLE==='doctor'&&['في الانتظار','عند الدكتور'].includes(a.status)&&a.date===iso(TODAY)?`<button onclick="startVisit(${a.id})" class="text-xs bg-primary text-white px-3 py-1.5 rounded-lg">${a.status==='عند الدكتور'?'كمّل الكشف':'ابدأ الكشف'}</button>`:''}
+            <button onclick="openFile(${a.pid})" class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary">الملف</button>
+            ${a.status!=='ملغي'&&a.status!=='تم الكشف'?`<button onclick="cancelAppt(${a.id})" class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-rose hover:text-rose">إلغاء</button>`:''}
+          </div></td>
+        </tr>`).join(''), 'مفيش مواعيد بالفلاتر دي.')}
+    </section>
+  </div>`;
+}
+
+/* ═══════════════ المرضى ═══════════════ */
+let pQuery = '';
+function patientsPage(){
+  const list = pQuery ? findPatients(pQuery) : DB.patients;
+  return `
+  <div class="space-y-5">
+    <div class="bg-white border border-line rounded-xl2 shadow-card p-4 flex flex-wrap gap-3 items-center">
+      <input value="${esc(pQuery)}" oninput="pQuery=this.value;renderPatientGrid()" placeholder="ابحث بالاسم أو رقم التليفون أو رقم الملف"
+             class="field flex-1 min-w-[220px]">
+      <button onclick="patientModal()" class="bg-primary text-white text-sm px-4 py-2.5 rounded-xl2 hover:bg-primaryd whitespace-nowrap">تسجيل مريض جديد</button>
+    </div>
+    <div id="pGrid">${patientGrid(list)}</div>
+  </div>`;
+}
+function patientGrid(list){
+  const headers = ['رقم الملف','المريض','التليفون','السن','الزيارات','فصيلة الدم','آخر تشخيص','الأدوية','الملفات','الإجراءات'];
+  return `<div class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+    <div class="px-5 py-4 border-b border-line flex items-center justify-between"><h2 class="font-semibold">سجل المرضى</h2><span class="text-sm text-muted">${list.length} مريض</span></div>
+    <div class="overflow-x-auto" tabindex="0" role="region" aria-label="جدول المرضى">
+      <table class="w-full text-right text-sm" style="min-width:1050px">
+        <caption class="sr-only">بيانات المرضى وإجراءات فتح الملف وحجز الموعد</caption>
+        <thead class="bg-canvas text-muted"><tr>${headers.map(h=>`<th scope="col" class="px-4 py-3 font-medium whitespace-nowrap">${h}</th>`).join('')}</tr></thead>
+        <tbody class="divide-y divide-line">${list.length ? list.map(p=>{
+          const visits=DB.appts.filter(a=>a.pid===p.id && a.status==='تم الكشف').length;
+          const last=DB.records.filter(r=>r.pid===p.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
+          return `<tr class="hover:bg-canvas/60 transition">
+            <td class="px-4 py-4 num text-muted">${fileNo(p)}</td>
+            <th scope="row" class="px-4 py-4 font-semibold whitespace-nowrap"><div class="flex items-center gap-3">${avatar(p.name)}${esc(p.name)}</div></th>
+            <td class="px-4 py-4 whitespace-nowrap"><span dir="ltr" class="num">${esc(p.phone)}</span></td>
+            <td class="px-4 py-4 num">${esc(p.age)}</td>
+            <td class="px-4 py-4 num">${visits}</td>
+            <td class="px-4 py-4"><span dir="ltr">${esc(p.blood||'—')}</span></td>
+            <td class="px-4 py-4 text-muted" style="min-width:200px;max-width:300px;overflow-wrap:anywhere">${last?esc(last.diagnosis):'لسه مفيش كشف'}</td>
+            <td class="px-4 py-4 num">${DB.treatments.filter(t=>t.pid===p.id&&t.active).length}</td>
+            <td class="px-4 py-4 num">${DB.files.filter(f=>f.pid===p.id).length}</td>
+            <td class="px-4 py-4"><div class="flex gap-2 whitespace-nowrap"><button onclick="openFile(${p.id})" class="bg-primary text-white px-3 py-2 rounded-lg hover:bg-primaryd">${ROLE==='nurse'?'إدخال البيانات':'فتح الملف'}</button>${ROLE!=='nurse'?`<button onclick="bookModal(${p.id})" class="border border-line px-3 py-2 rounded-lg hover:border-primary hover:text-primary">حجز موعد</button>`:''}</div></td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="10" class="p-10 text-center text-muted">لا توجد نتائج. جرّب الاسم أو التليفون أو رقم الملف، أو سجّل مريضاً جديداً.</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function renderPatientGrid(){
+  const list = pQuery ? findPatients(pQuery) : DB.patients;
+  $('#pGrid').innerHTML = patientGrid(list);
+}
+
+/* ═══════════════ السجل الطبي ═══════════════ */
+let recPid = null;
+function recordsPage(){
+  const recs = (recPid ? DB.records.filter(r=>r.pid===recPid) : DB.records)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  return `
+  <div class="grid lg:grid-cols-[280px_1fr] gap-6">
+    <aside class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden h-fit">
+      <div class="p-4 border-b border-line"><h2 class="font-semibold text-sm">اختار مريض</h2></div>
+      <div class="max-h-[70vh] overflow-y-auto divide-y divide-line">
+        <button onclick="recPid=null;go('records')" class="w-full text-right px-4 py-3 text-sm ${recPid===null?'bg-primary/5 text-primary font-medium':'hover:bg-canvas/60'}">كل الحالات</button>
+        ${DB.patients.map(p=>`
+          <button onclick="recPid=${p.id};go('records')" class="w-full text-right px-4 py-3 flex items-center gap-3 ${recPid===p.id?'bg-primary/5':'hover:bg-canvas/60'}">
+            ${avatar(p.name,'w-8 h-8')}
+            <span class="min-w-0"><span class="block text-sm font-medium truncate">${esc(p.name)}</span>
+            <span class="block text-xs text-muted num">${DB.records.filter(r=>r.pid===p.id).length} كشف</span></span>
+          </button>`).join('')}
+      </div>
+    </aside>
+
+    <div class="space-y-4">
+      <div class="bg-white border border-line rounded-xl2 shadow-card p-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="font-semibold">${recPid ? esc(patient(recPid).name) : 'السجل الطبي الكامل'}</h2>
+          <p class="text-muted text-xs mt-0.5">${recs.length} كشف مسجّل</p>
+        </div>
+        <button onclick="recordModal(${recPid||'null'})" class="bg-primary text-white text-sm px-4 py-2.5 rounded-xl2 hover:bg-primaryd">تسجيل كشف جديد</button>
+      </div>
+
+      ${recs.length ? recs.map(r=>{
+        const p = patient(r.pid);
+        return `<article class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+          <div class="p-5 flex flex-wrap items-center gap-3 border-b border-line bg-canvas/40">
+            ${avatar(p.name)}
+            <div class="min-w-0"><p class="font-medium text-sm">${esc(p.name)}</p>
+            <p class="text-xs text-muted">${fmtDate(r.date)}</p></div>
+            <div class="mr-auto flex gap-2">
+              <button onclick="printRx(${r.id})" class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary">طباعة الروشتة</button>
+            </div>
+          </div>
+          <div class="p-5 grid md:grid-cols-2 gap-5 text-sm">
+            <div><p class="text-xs text-muted mb-1">الشكوى</p><p class="leading-relaxed">${esc(r.complaint)}</p></div>
+            <div><p class="text-xs text-muted mb-1">التشخيص</p><p class="leading-relaxed font-medium">${esc(r.diagnosis)}</p></div>
+            <div><p class="text-xs text-muted mb-1">العلاج</p><p class="leading-relaxed whitespace-pre-line">${esc(r.rx)}</p></div>
+            <div class="space-y-3">
+              <div><p class="text-xs text-muted mb-1">التحاليل والأشعة</p><p>${esc(r.tests||'لا يوجد')}</p></div>
+              <div><p class="text-xs text-muted mb-1">المتابعة</p><p>${esc(r.next||'حسب الحاجة')}</p></div>
+            </div>
+          </div>
+        </article>`;}).join('')
+      : `<div class="bg-white border border-line rounded-xl2 p-12 text-center">
+          <p class="font-medium">مفيش كشوفات مسجّلة للحالة دي</p>
+          <p class="text-muted text-sm mt-1">أول كشف هيتسجل هنا ويفضل متاح في أي زيارة جاية.</p>
+        </div>`}
+    </div>
+  </div>`;
+}
+
+/* ═══════════════ التحصيل ═══════════════ */
+let billDate = null;
+function billingPage(){
+  const day = billDate || iso(TODAY), isToday = day===iso(TODAY);
+  const list = DB.appts.filter(a=>a.date===day && a.status!=='ملغي').sort((a,b)=>(a.arrived||a.time).localeCompare(b.arrived||b.time));
+  const paid = list.filter(a=>a.paid), due = list.filter(a=>!a.paid);
+  const sum = xs => xs.reduce((s,a)=>s+Number(a.fee||0),0);
+  const methods = ['كاش','فيزا','تحويل'].map(m=>({ m, xs: paid.filter(a=>a.method===m) }));
+  const other = paid.filter(a=>!['كاش','فيزا','تحويل'].includes(a.method));
+  if (other.length) methods.push({ m:'أخرى', xs: other });
+  const dueDone = due.filter(a=>a.status==='تم الكشف');
+
+  const row = (a, cells) => `<tr class="border-t border-line hover:bg-canvas/60">
+      <td class="py-3 px-4"><button onclick="openFile(${a.pid})" class="flex items-center gap-3 text-right hover:text-primary">${avatar(patient(a.pid).name,'w-8 h-8')}
+        <span class="min-w-0"><span class="block text-sm font-medium truncate">${esc(patient(a.pid).name)}</span>
+        <span class="block text-xs text-muted num">ملف ${fileNo(patient(a.pid))}</span></span></button></td>
+      ${cells}</tr>`;
+
+  return `
+  <div class="space-y-6">
+    <div class="bg-white border border-line rounded-xl2 shadow-card p-4 flex flex-wrap items-end gap-3">
+      <div><label class="lbl" for="billDay">اليوم</label>
+        <input id="billDay" type="date" value="${day}" max="${iso(TODAY)}" onchange="billDate=this.value||null;go('billing')" class="field w-44 num"></div>
+      ${isToday ? '' : `<button onclick="billDate=null;go('billing')" class="text-sm text-primary px-3 py-2.5 hover:underline">رجوع للنهارده</button>`}
+      <p class="mr-auto text-sm text-muted">${fmtDate(day)}</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      ${statCard('إجمالي المحصّل', money(sum(paid)), `${paid.length} عملية`, 'billing', 'bg-mint/10 text-mint')}
+      ${methods.filter(x=>x.xs.length || x.m!=='تحويل').slice(0,2).map(x=>statCard(x.m, money(sum(x.xs)), `${x.xs.length} عملية`, 'reports', 'bg-primary/10 text-primary')).join('')}
+      ${statCard('لسه ما اتحصّلش', money(sum(due)), `${due.length} ${dueDone.length ? `· منهم ${dueDone.length} خلصوا الكشف` : 'مستحق'}`, 'queue', 'bg-rose/10 text-rose')}
+    </div>
+
+    <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+      <div class="p-5 border-b border-line flex items-center justify-between flex-wrap gap-3">
+        <div><h2 class="font-semibold">المبالغ اللي اتحصّلت</h2>
+          <p class="text-xs text-muted mt-0.5">${methods.map(x=>`${x.m}: <span class="num">${money(sum(x.xs))}</span> ج`).join(' · ')}</p></div>
+        <span class="num text-mint font-bold text-lg">${money(sum(paid))} ج</span>
+      </div>
+      ${paid.length ? `<div class="overflow-x-auto"><table class="w-full text-right">
+        <thead><tr class="bg-canvas/70 text-xs text-muted">
+          ${['المريض','الوقت','نوع الزيارة','طريقة الدفع','المبلغ',''].map(h=>`<th class="py-2.5 px-4 font-medium">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${paid.map(a=>row(a, `
+          <td class="py-3 px-4 num text-sm text-muted whitespace-nowrap">${fmtTime(a.arrived||a.time)}</td>
+          <td class="py-3 px-4 text-sm">${esc(a.type)}</td>
+          <td class="py-3 px-4"><span class="text-xs px-2.5 py-1 rounded-full ${a.method==='كاش'?'bg-mint/10 text-mint':'bg-primary/10 text-primary'}">${esc(a.method||'—')}</span></td>
+          <td class="py-3 px-4 num text-sm font-semibold whitespace-nowrap">${money(a.fee)} ج</td>
+          <td class="py-3 px-4 text-left"><button onclick="printInvoice(${a.id})" class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary whitespace-nowrap">طباعة الفاتورة</button></td>`)).join('')}</tbody>
+        <tfoot><tr class="border-t-2 border-line bg-canvas/50">
+          <td class="py-3 px-4 text-sm font-semibold" colspan="4">الإجمالي</td>
+          <td class="py-3 px-4 num font-bold text-mint whitespace-nowrap">${money(sum(paid))} ج</td><td></td></tr></tfoot>
+      </table></div>` : `<p class="p-10 text-center text-sm text-muted">${isToday ? 'لسه مفيش تحصيل النهارده.' : 'مفيش تحصيل في اليوم ده.'}</p>`}
+    </section>
+
+    <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+      <div class="p-5 border-b border-line flex items-center justify-between">
+        <div><h2 class="font-semibold">لسه ما اتحصّلش</h2>
+          <p class="text-xs text-muted mt-0.5">${due.length ? 'حصّل الرسوم قبل ما المريض يمشي' : 'كل الفواتير اتحصّلت'}</p></div>
+        <span class="num text-rose font-semibold">${money(sum(due))} ج</span>
+      </div>
+      ${due.length ? `<div class="overflow-x-auto"><table class="w-full text-right">
+        <thead><tr class="bg-canvas/70 text-xs text-muted">
+          ${['المريض','الوقت','الحالة','المطلوب',''].map(h=>`<th class="py-2.5 px-4 font-medium">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${due.map(a=>row(a, `
+          <td class="py-3 px-4 num text-sm text-muted whitespace-nowrap">${fmtTime(a.time)}</td>
+          <td class="py-3 px-4">${badge(a.status)}</td>
+          <td class="py-3 px-4 num text-sm font-semibold whitespace-nowrap">${money(a.fee)} ج</td>
+          <td class="py-3 px-4 text-left"><button onclick="payModal(${a.id})" class="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primaryd whitespace-nowrap">تحصيل الآن</button></td>`)).join('')}</tbody>
+      </table></div>` : ''}
+    </section>
+  </div>`;
+}
+
+/* ═══════════════ التقارير ═══════════════ */
+function reportsPage(){
+  const days = [...Array(7)].map((_,i)=>iso(addDays(TODAY,-6+i)));
+  const data = days.map(d=>{
+    const list = DB.appts.filter(a=>a.date===d && a.status!=='ملغي');
+    return { d, visits:list.length, rev:list.filter(a=>a.paid).reduce((s,a)=>s+a.fee,0) };
+  });
+  const max = Math.max(...data.map(x=>x.visits), 1);
+  const types = ['كشف','استشارة','متابعة'].map(t=>({
+    t, n: DB.appts.filter(a=>a.type===t&&a.status!=='ملغي').length }));
+  const totalT = types.reduce((s,x)=>s+x.n,0) || 1;
+  const weekRev = data.reduce((s,x)=>s+x.rev,0);
+
+  return `
+  <div class="space-y-6">
+    <div class="grid sm:grid-cols-3 gap-4">
+      ${statCard('زيارات الأسبوع', data.reduce((s,x)=>s+x.visits,0), 'آخر ٧ أيام','patients','bg-primary/10 text-primary')}
+      ${statCard('إيراد الأسبوع', money(weekRev), 'محصّل','billing','bg-mint/10 text-mint')}
+      ${statCard('متوسط اليوم', money(Math.round(weekRev/7)), 'جنيه','reports','bg-primary/10 text-primary')}
+    </div>
+
+    <section class="bg-white border border-line rounded-xl2 shadow-card p-6">
+      <h2 class="font-semibold">حركة العيادة — آخر ٧ أيام</h2>
+      <p class="text-muted text-xs mt-1">عدد الزيارات في كل يوم</p>
+      <div class="mt-8 flex items-end gap-3 h-52">
+        ${data.map(x=>`
+          <div class="flex-1 flex flex-col items-center gap-2 group">
+            <span class="text-xs num text-muted opacity-0 group-hover:opacity-100 transition">${x.visits}</span>
+            <div class="w-full rounded-t-lg ${x.d===iso(TODAY)?'bg-primary':'bg-primary/25'} transition-all"
+                 style="height:${Math.max(6,(x.visits/max)*100)}%"></div>
+            <span class="text-[.7rem] text-muted">${new Date(x.d+'T00:00:00').toLocaleDateString('ar-EG',{weekday:'short'})}</span>
+          </div>`).join('')}
+      </div>
+    </section>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <section class="bg-white border border-line rounded-xl2 shadow-card p-6">
+        <h2 class="font-semibold">توزيع نوع الزيارة</h2>
+        <div class="mt-5 space-y-4">
+          ${types.map(x=>`
+            <div>
+              <div class="flex justify-between text-sm mb-1.5"><span>${x.t}</span>
+              <span class="num text-muted">${x.n} · ${Math.round(x.n/totalT*100)}%</span></div>
+              <div class="h-2 bg-canvas rounded-full overflow-hidden">
+                <div class="h-full bg-primary rounded-full" style="width:${x.n/totalT*100}%"></div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </section>
+
+      <section class="bg-white border border-line rounded-xl2 shadow-card p-6">
+        <h2 class="font-semibold">إيراد كل يوم</h2>
+        <div class="mt-5 divide-y divide-line">
+          ${data.slice().reverse().map(x=>`
+            <div class="flex items-center justify-between py-2.5 text-sm">
+              <span class="${x.d===iso(TODAY)?'font-medium':'text-muted'}">${fmtShort(x.d)}${x.d===iso(TODAY)?' — النهارده':''}</span>
+              <span class="num font-medium">${money(x.rev)} ج</span>
+            </div>`).join('')}
+        </div>
+      </section>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════ الإعدادات ═══════════════ */
+const SUB_STATE = {
+  trial:     ['فترة تجربة', 'bg-primary/10 text-primary'],
+  active:    ['اشتراك ساري', 'bg-mint/10 text-mint'],
+  expired:   ['الاشتراك منتهي', 'bg-rose/10 text-rose'],
+  suspended: ['الحساب موقوف', 'bg-rose/10 text-rose'],
+};
+const isOwner = () => !!Sync.account?.user.isOwner;
+
+function usageBar(label, used, max, unit){
+  const pct = max ? Math.min(100, Math.round(used / max * 100)) : 0;
+  return `<div>
+    <div class="flex justify-between text-xs mb-1.5"><span class="text-muted">${label}</span>
+      <span class="num">${money(used)} ${max ? '/ ' + money(max) : '· بلا حدود'} ${unit}</span></div>
+    <div class="h-1.5 bg-canvas rounded-full overflow-hidden">
+      <div class="h-full rounded-full ${pct>=90?'bg-rose':pct>=70?'bg-amber':'bg-primary'}" style="width:${max?pct:4}%"></div></div>
+  </div>`;
+}
+
+/* ── إدارة قايمة الأدوية (الدكتور) ── */
+// بداية بس — الدكتور بيراجع الجرعات ويعدّلها على حسب شغله
+const STARTER_DRUGS = [
+  ['باراسيتامول ٥٠٠مج', '٣ مرات يومياً', 'بعد الأكل', '٥ أيام', ''],
+  ['ايبوبروفين ٤٠٠مج', '٣ مرات يومياً', 'بعد الأكل', '٥ أيام', ''],
+  ['ديكلوفيناك ٥٠مج', 'مرتين يومياً', 'بعد الأكل', '٥ أيام', ''],
+  ['أوميبرازول ٢٠مج', 'مرة يومياً', 'قبل الأكل', '١٤ يوم', 'قبل الفطار بنص ساعة'],
+  ['إيزوميبرازول ٤٠مج', 'مرة يومياً', 'قبل الأكل', '١٤ يوم', ''],
+  ['بانتوبرازول ٤٠مج', 'مرة يومياً', 'قبل الأكل', '١٤ يوم', ''],
+  ['دومبيريدون ١٠مج', '٣ مرات يومياً', 'قبل الأكل', '٧ أيام', ''],
+  ['ميبيفرين ١٣٥مج', '٣ مرات يومياً', 'قبل الأكل', '١٤ يوم', ''],
+  ['هيوسين بيوتيل بروميد ١٠مج', 'عند اللزوم', '', '', 'للمغص — لحد ٣ مرات في اليوم'],
+  ['سيميثيكون', '٣ مرات يومياً', 'بعد الأكل', '٧ أيام', ''],
+  ['أوندانسيترون ٤مج', 'مرتين يومياً', 'قبل الأكل', '٣ أيام', ''],
+  ['محلول معالجة الجفاف', 'عند اللزوم', '', '', 'كيس في لتر مية — بعد كل مرة إسهال'],
+  ['نيتازوكسانيد ٥٠٠مج', 'مرتين يومياً', 'بعد الأكل', '٣ أيام', ''],
+  ['ميترونيدازول ٥٠٠مج', '٣ مرات يومياً', 'بعد الأكل', '٧ أيام', ''],
+  ['أموكسيسيلين + كلافيولانيك ١جم', 'مرتين يومياً', 'بعد الأكل', '٧ أيام', ''],
+  ['أزيثرومايسين ٥٠٠مج', 'مرة يومياً', 'قبل الأكل', '٣ أيام', ''],
+  ['سيبروفلوكساسين ٥٠٠مج', 'مرتين يومياً', 'بعد الأكل', '٧ أيام', ''],
+  ['لوراتادين ١٠مج', 'مرة يومياً', '', '٧ أيام', ''],
+  ['لاكتيلوز شراب', 'مرة يومياً', 'قبل النوم', '١٤ يوم', '١٥ مل'],
+  ['ميتفورمين ٥٠٠مج', 'مرتين يومياً', 'بعد الأكل', 'مستمر', ''],
+  ['أملوديبين ٥مج', 'مرة يومياً', '', 'مستمر', ''],
+  ['بيسوبرولول ٥مج', 'مرة يومياً', '', 'مستمر', 'الصبح'],
+  ['أتورفاستاتين ٢٠مج', 'مرة يومياً', 'قبل النوم', 'مستمر', ''],
+  ['فيروس سلفات (حديد)', 'مرة يومياً', 'بعد الأكل', 'شهر', ''],
+  ['فيتامين د ٥٠٠٠٠ وحدة', '', '', 'شهر', 'كبسولة واحدة كل أسبوع'],
+];
+let DRUG_EDIT = null;
+function drugsPanel(){
+  const use = drugUsage(), list = sortedDrugs(), e = DRUG_EDIT ? DB.drugs.find(d=>d.id===DRUG_EDIT) : null;
+  const missing = STARTER_DRUGS.filter(([n])=>!drugInList(n)).length;
+  const sel = (id, opts, val, label) => `<div><label class="lbl" for="${id}">${label}</label><select id="${id}" class="field">
+      <option value="">—</option>${opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')}
+      ${val && !opts.includes(val) ? `<option selected>${esc(val)}</option>` : ''}</select></div>`;
+  return `
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div><h2 class="font-semibold">قايمة الأدوية</h2>
+        <p class="text-muted text-xs mt-1 leading-relaxed">الأدوية اللي بتكتبها كتير بجرعتها المعتادة — بتظهرلك في شاشة الكشف تختار منها بضغطة، والأكثر استخداماً بيطلع الأول.</p></div>
+      ${missing ? `<button onclick="seedDrugs()" class="border border-primary text-primary text-sm px-4 py-2 rounded-xl2 hover:bg-primary/5 whitespace-nowrap">+ أضف قايمة جاهزة (<span class="num">${missing}</span> دواء)</button>` : ''}
+    </div>
+    <form onsubmit="saveDrug(event)" class="grid sm:grid-cols-6 gap-3 mt-5 border border-dashed border-line rounded-xl2 p-4 bg-canvas/40">
+      <p class="sm:col-span-6 text-sm font-semibold">${e ? 'تعديل: ' + esc(e.name) : 'إضافة دواء'}</p>
+      <div class="sm:col-span-2"><label class="lbl" for="dgName">اسم الدواء والتركيز</label>
+        <input id="dgName" required class="field" value="${esc(e?.name||'')}" placeholder="مثال: أوميبرازول ٢٠مج"></div>
+      ${sel('dgFreq', FREQ, e?.freq, 'الجرعة')}${sel('dgWhen', WHEN, e?.when, 'التوقيت')}${sel('dgDur', DURS, e?.dur, 'المدة')}
+      <div><label class="lbl" for="dgExtra">تعليمات</label><input id="dgExtra" class="field" value="${esc(e?.extra||'')}"></div>
+      <div class="sm:col-span-6 flex gap-2">
+        <button class="bg-primary text-white text-sm font-medium px-4 py-2.5 rounded-xl2 hover:bg-primaryd">${e ? 'حفظ التعديل' : 'إضافة للقايمة'}</button>
+        ${e ? `<button type="button" onclick="DRUG_EDIT=null;go('settings')" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>` : ''}
+      </div>
+    </form>
+    ${list.length ? `<div class="mt-5 border border-line rounded-xl2 divide-y divide-line overflow-hidden">
+      ${list.map(d=>`<div class="p-3 flex items-center gap-3 ${DRUG_EDIT===d.id?'bg-primary/5':''}">
+        <div class="min-w-0 flex-1"><p class="text-sm font-semibold truncate">${esc(d.name)}</p>
+          <p class="text-xs text-muted truncate">${esc(drugDose(d)) || 'من غير جرعة افتراضية'}</p></div>
+        ${use.get(drugKey(d.name)) ? `<span class="text-[.7rem] text-primary bg-primary/10 px-2 py-0.5 rounded-full num whitespace-nowrap">اتكتب ${use.get(drugKey(d.name))} مرة</span>` : ''}
+        <button onclick="DRUG_EDIT=${d.id};go('settings')" class="text-xs border border-line px-2.5 py-1.5 rounded-lg hover:border-primary hover:text-primary">تعديل</button>
+        <button onclick="deleteDrug(${d.id})" class="text-xs text-muted hover:text-rose px-2">حذف</button>
+      </div>`).join('')}
+    </div>` : '<p class="text-sm text-muted text-center mt-8">القايمة فاضية — ضيف أدويتك أو ابدأ بالقايمة الجاهزة وعدّل عليها.</p>'}
+    <p class="text-xs text-muted mt-4">الجرعات هنا قيم مبدئية بتتحط في الروشتة وتقدر تغيّرها لكل مريض — راجع القايمة الجاهزة قبل ما تعتمد عليها.</p>`;
+}
+function saveDrug(ev){
+  ev.preventDefault();
+  const name = $('#dgName').value.trim();
+  if (!name) return;
+  const clash = DB.drugs.find(d=>drugKey(d.name)===drugKey(name) && d.id!==DRUG_EDIT);
+  if (clash) return toast('الدواء ده موجود في القايمة — عدّله من تحت','warn');
+  const data = { name, freq:$('#dgFreq').value, when:$('#dgWhen').value, dur:$('#dgDur').value, extra:$('#dgExtra').value.trim() };
+  if (DRUG_EDIT) Object.assign(DB.drugs.find(d=>d.id===DRUG_EDIT), data);
+  else DB.drugs.push({ id:Sync.newId(), ...data });
+  toast(DRUG_EDIT ? 'الدواء اتعدّل' : 'الدواء اتضاف للقايمة');
+  DRUG_EDIT = null; go('settings');
+}
+function deleteDrug(id){
+  const d = DB.drugs.find(x=>x.id===id);
+  if (!d || !confirm(`تشيل ${d.name} من القايمة؟ الروشتات القديمة مش هتتأثر.`)) return;
+  DB.drugs = DB.drugs.filter(x=>x.id!==id);
+  if (DRUG_EDIT===id) DRUG_EDIT = null;
+  toast('الدواء اتشال من القايمة','warn'); go('settings');
+}
+function seedDrugs(){
+  const add = STARTER_DRUGS.filter(([n])=>!drugInList(n));
+  add.forEach(([name, freq, when, dur, extra])=>DB.drugs.push({ id:Sync.newId(), name, freq, when, dur, extra }));
+  toast(`اتضاف ${add.length} دواء — راجع الجرعات وعدّل اللي محتاجه`);
+  go('settings');
+}
+
+/* ── إدارة قايمة التحاليل والأشعة ── */
+const STARTER_LABS = [
+  ['صورة دم CBC','تحليل'], ['سرعة ترسيب ESR','تحليل'], ['CRP','تحليل'],
+  ['سكر صائم','تحليل'], ['سكر فاطر','تحليل'], ['سكر تراكمي HbA1c','تحليل'],
+  ['وظائف كبد','تحليل'], ['وظائف كلى','تحليل'], ['دهون ثلاثية وكوليسترول','تحليل'],
+  ['وظائف غدة درقية TSH','تحليل'], ['فيتامين د','تحليل'], ['فيتامين B12','تحليل'], ['صورة حديد وفيريتين','تحليل'],
+  ['H. Pylori أنتيجين في البراز','تحليل'], ['تحليل بول كامل','تحليل'], ['تحليل براز كامل','تحليل'],
+  ['سونار بطن وحوض','أشعة'], ['أشعة عادية على الصدر','أشعة'], ['أشعة مقطعية على البطن','أشعة'],
+  ['رسم قلب ECG','إجراء'], ['منظار معدة','إجراء'], ['منظار قولون','إجراء'],
+];
+let LAB_EDIT = null;
+function labsPanel(){
+  const use = labUsage(), list = sortedLabs(), e = LAB_EDIT ? DB.labs.find(l=>l.id===LAB_EDIT) : null;
+  const missing = STARTER_LABS.filter(([n])=>!DB.labs.some(l=>labKey(l.name)===labKey(n))).length;
+  const tone = { 'تحليل':'bg-primary/10 text-primary', 'أشعة':'bg-amber/10 text-amber', 'إجراء':'bg-mint/10 text-mint' };
+  return `
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div><h2 class="font-semibold">التحاليل والأشعة</h2>
+        <p class="text-muted text-xs mt-1 leading-relaxed">اللي بتطلبه من المرضى — بيظهرلك في شاشة الكشف تختار منه بضغطة، والأكثر طلباً بيطلع الأول.</p></div>
+      ${missing ? `<button onclick="seedLabs()" class="border border-primary text-primary text-sm px-4 py-2 rounded-xl2 hover:bg-primary/5 whitespace-nowrap">+ أضف قايمة جاهزة (<span class="num">${missing}</span>)</button>` : ''}
+    </div>
+    <form onsubmit="saveLab(event)" class="grid sm:grid-cols-6 gap-3 mt-5 border border-dashed border-line rounded-xl2 p-4 bg-canvas/40">
+      <p class="sm:col-span-6 text-sm font-semibold">${e ? 'تعديل: ' + esc(e.name) : 'إضافة تحليل أو أشعة'}</p>
+      <div class="sm:col-span-3"><label class="lbl" for="lbName">الاسم</label>
+        <input id="lbName" required class="field" value="${esc(e?.name||'')}" placeholder="مثال: وظائف كبد"></div>
+      <div><label class="lbl" for="lbKind">النوع</label><select id="lbKind" class="field">
+        ${LAB_KINDS.map(k=>`<option ${(e?.kind||'تحليل')===k?'selected':''}>${k}</option>`).join('')}</select></div>
+      <div class="sm:col-span-2"><label class="lbl" for="lbNote">ملاحظة للمريض</label>
+        <input id="lbNote" class="field" value="${esc(e?.note||'')}" placeholder="اختياري — مثلاً: صايم ٨ ساعات"></div>
+      <div class="sm:col-span-6 flex gap-2">
+        <button class="bg-primary text-white text-sm font-medium px-4 py-2.5 rounded-xl2 hover:bg-primaryd">${e ? 'حفظ التعديل' : 'إضافة للقايمة'}</button>
+        ${e ? `<button type="button" onclick="LAB_EDIT=null;go('settings')" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>` : ''}
+      </div>
+    </form>
+    ${list.length ? `<div class="mt-5 border border-line rounded-xl2 divide-y divide-line overflow-hidden">
+      ${list.map(l=>`<div class="p-3 flex items-center gap-3 ${LAB_EDIT===l.id?'bg-primary/5':''}">
+        <span class="text-[.7rem] px-2 py-0.5 rounded-full whitespace-nowrap ${tone[l.kind]||tone['تحليل']}">${esc(l.kind||'تحليل')}</span>
+        <div class="min-w-0 flex-1"><p class="text-sm font-semibold truncate">${esc(l.name)}</p>
+          ${l.note ? `<p class="text-xs text-muted truncate">${esc(l.note)}</p>` : ''}</div>
+        ${use.get(labKey(l.name)) ? `<span class="text-[.7rem] text-primary bg-primary/10 px-2 py-0.5 rounded-full num whitespace-nowrap">اتطلب ${use.get(labKey(l.name))} مرة</span>` : ''}
+        <button onclick="LAB_EDIT=${l.id};go('settings')" class="text-xs border border-line px-2.5 py-1.5 rounded-lg hover:border-primary hover:text-primary">تعديل</button>
+        <button onclick="deleteLab(${l.id})" class="text-xs text-muted hover:text-rose px-2">حذف</button>
+      </div>`).join('')}
+    </div>` : '<p class="text-sm text-muted text-center mt-8">القايمة فاضية — ضيف تحاليلك أو ابدأ بالقايمة الجاهزة.</p>'}`;
+}
+function saveLab(ev){
+  ev.preventDefault();
+  const name = $('#lbName').value.trim();
+  if (!name) return;
+  if (DB.labs.some(l=>labKey(l.name)===labKey(name) && l.id!==LAB_EDIT)) return toast('ده موجود في القايمة — عدّله من تحت','warn');
+  const data = { name, kind:$('#lbKind').value, note:$('#lbNote').value.trim() };
+  if (LAB_EDIT) Object.assign(DB.labs.find(l=>l.id===LAB_EDIT), data);
+  else DB.labs.push({ id:Sync.newId(), ...data });
+  toast(LAB_EDIT ? 'اتعدّل' : 'اتضاف للقايمة');
+  LAB_EDIT = null; go('settings');
+}
+function deleteLab(id){
+  const l = DB.labs.find(x=>x.id===id);
+  if (!l || !confirm(`تشيل ${l.name} من القايمة؟ الكشوفات القديمة مش هتتأثر.`)) return;
+  DB.labs = DB.labs.filter(x=>x.id!==id);
+  if (LAB_EDIT===id) LAB_EDIT = null;
+  toast('اتشال من القايمة','warn'); go('settings');
+}
+function seedLabs(){
+  const add = STARTER_LABS.filter(([n])=>!DB.labs.some(l=>labKey(l.name)===labKey(n)));
+  add.forEach(([name, kind])=>DB.labs.push({ id:Sync.newId(), name, kind, note:'' }));
+  toast(`اتضاف ${add.length} — عدّل واحذف براحتك`);
+  go('settings');
+}
+
+let SET_TAB = 'clinic';
+function setSettingsTab(t){ SET_TAB = t; RX_DRAFT = null; DRUG_EDIT = null; LAB_EDIT = null; go('settings'); }
+
+function settingsPage(){
+  const c = DB.clinic, sub = Sync.account.clinic, st = Sync.status;
+  const owner = isOwner(), ro = owner && Sync.canWrite() ? '' : 'disabled';
+  const [stLabel, stTone] = SUB_STATE[sub.state] || SUB_STATE.expired;
+  const icon = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-4 h-4 shrink-0">${d}</svg>`;
+
+  const tabs = [
+    ['clinic', 'بيانات العيادة', icon(ICON.records)],
+    ...(owner ? [['team', 'فريق العيادة', icon(ICON.patients)]] : []),
+    ['plan', 'الاشتراك', icon(ICON.billing)],
+    ['sync', 'المزامنة', icon('<path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2"/><path d="M21 4v5h-5M3 20v-5h5"/>')
+      + (st.pending ? `<span class="num text-[.65rem] bg-amber/15 text-amber rounded-full px-1.5">${st.pending}</span>` : '')],
+    ...(ROLE==='doctor' ? [['drugs', 'قايمة الأدوية', icon('<path d="m10.5 20.5-7-7a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m7 10 7 7"/>')]] : []),
+    ...(ROLE==='doctor' ? [['labs', 'التحاليل والأشعة', icon('<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/>')]] : []),
+    ['rx', 'الروشتة', icon('<path d="M6 3h9l5 5v13H6z"/><path d="M9 11h2.5a2 2 0 0 1 0 4H9v-4Zm0 4v3m2-3 3 3"/>')],
+    ['look', 'المظهر', icon('<path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>')],
+  ];
+  if (!tabs.some(t=>t[0]===SET_TAB)) SET_TAB = 'clinic';
+  if (SET_TAB==='rx' && !RX_DRAFT) RX_DRAFT = rxConf();
+
+  const panels = {
+    rx: SET_TAB==='rx' ? rxSettingsPanel(owner) : '',
+    drugs: SET_TAB==='drugs' ? drugsPanel() : '',
+    labs: SET_TAB==='labs' ? labsPanel() : '',
+    clinic: `
+      <h2 class="font-semibold">بيانات العيادة</h2>
+      <p class="text-muted text-xs mt-1">${owner?'البيانات دي بتظهر على الروشتة والفاتورة المطبوعة. التعديل محتاج نت.':'صاحب العيادة بس هو اللي يقدر يعدّل البيانات دي.'}</p>
+      <div class="grid sm:grid-cols-2 gap-4 mt-5">
+        <div><label class="lbl" for="setName">اسم العيادة</label><input id="setName" ${ro} class="field" value="${esc(c.name)}"></div>
+        <div><label class="lbl" for="setSpec">التخصص</label><input id="setSpec" ${ro} class="field" value="${esc(c.spec)}"></div>
+        <div><label class="lbl" for="setDoc">اسم الطبيب على الروشتة</label><input id="setDoc" ${ro} class="field" value="${esc(c.doctor)}"></div>
+        <div><label class="lbl" for="setPhone">تليفون العيادة</label><input id="setPhone" ${ro} class="field num" value="${esc(c.phone)}"></div>
+        <div class="sm:col-span-2"><label class="lbl" for="setAddr">العنوان</label><input id="setAddr" ${ro} class="field" value="${esc(c.address)}"></div>
+        <div><label class="lbl" for="setOpen">بداية العمل</label><input id="setOpen" ${ro} type="time" class="field num" value="${esc(c.open)}"></div>
+        <div><label class="lbl" for="setClose">نهاية العمل</label><input id="setClose" ${ro} type="time" class="field num" value="${esc(c.close)}"></div>
+      </div>
+      <h3 class="font-semibold text-sm mt-6">أسعار الخدمات</h3>
+      <div class="grid sm:grid-cols-3 gap-4 mt-3">
+        ${Object.entries(DB.fees).map(([k,v])=>`
+          <div><label class="lbl">${esc(k)}</label>
+          <input data-fee="${esc(k)}" ${ro} type="number" min="0" class="field num" value="${esc(v)}"></div>`).join('')}
+      </div>
+      ${ro ? '' : `<div class="flex gap-3 mt-6 pt-5 border-t border-line">
+        <button id="setSave" onclick="saveSettings()" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">حفظ التعديلات</button>
+        <button onclick="go('settings')" class="border border-line text-sm px-5 py-2.5 rounded-xl2 hover:border-primary hover:text-primary">تراجع</button>
+      </div>`}`,
+
+    team: `
+      <h2 class="font-semibold">فريق العيادة</h2>
+      <p class="text-muted text-xs mt-1">كل واحد يدخل بحسابه — الدكتور بيكشف، التمريض بيسجل الوصول والقياسات، والاستقبال بيحجز ويحصّل.</p>
+      <div id="teamBox" class="mt-5 text-sm text-muted">بيحمّل...</div>`,
+
+    plan: `
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div><h2 class="font-semibold">الاشتراك</h2>
+          <p class="text-muted text-xs mt-1">باقة <b class="text-ink">${esc(sub.plan.name)}</b> · <span class="num">${money(sub.plan.price)}</span> جنيه / شهر</p></div>
+        <span class="text-xs px-2.5 py-1 rounded-full ${stTone}">${stLabel}${sub.endsAt ? ` · ${['trial','active'].includes(sub.state)?`فاضل <span class="num">${sub.daysLeft}</span> يوم`:'انتهى ' + fmtShort(sub.endsAt.slice(0,10))}` : ''}</span>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-5 mt-6">
+        ${usageBar('المستخدمين', sub.usage.users, sub.plan.limits.users, '')}
+        ${usageBar('المرضى', sub.usage.patients, sub.plan.limits.patients, '')}
+        ${usageBar('مساحة الملفات', sub.usage.storageMb, sub.plan.limits.storageMb, 'م.ب')}
+      </div>
+      <p class="text-xs text-muted mt-6">للتجديد أو الترقية لباقة أكبر كلّم فريق الدعم — الأرقام دي بتتحدّث مع كل مزامنة.</p>`,
+
+    sync: `
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div><h2 class="font-semibold">المزامنة والعمل من غير نت</h2>
+          <p class="text-muted text-xs mt-1 leading-relaxed">كل البيانات محفوظة على الجهاز ده. لو النت قطع كمّل شغلك عادي — التعديلات بتترفع أول ما يرجع.</p></div>
+        <button onclick="manualSync()" class="border border-line text-sm px-4 py-2 rounded-xl2 hover:border-primary hover:text-primary">مزامنة الآن</button>
+      </div>
+      <dl class="grid grid-cols-3 gap-3 mt-5 text-center">
+        <div class="bg-canvas rounded-xl2 p-3"><dt class="text-[.7rem] text-muted">الاتصال</dt><dd class="text-sm font-semibold mt-1 ${st.online?'text-mint':'text-amber'}">${st.online?'متصل':'مفيش نت'}</dd></div>
+        <div class="bg-canvas rounded-xl2 p-3"><dt class="text-[.7rem] text-muted">تغييرات مستنية</dt><dd class="text-sm font-semibold num mt-1">${st.pending}</dd></div>
+        <div class="bg-canvas rounded-xl2 p-3"><dt class="text-[.7rem] text-muted">آخر مزامنة</dt><dd class="text-sm font-semibold num mt-1">${st.lastSync?new Date(st.lastSync).toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'}):'—'}</dd></div>
+      </dl>`,
+
+    look: `
+      <h2 class="font-semibold">خط الواجهة</h2>
+      <p class="text-muted text-xs mt-1">بيتطبق على الجهاز ده بس — على الشاشة والطباعة.</p>
+      <div class="grid sm:grid-cols-3 gap-3 mt-5">
+        ${FONTS.map(f=>`
+          <button onclick="setFont('${f}')" style="font-family:'${f}',sans-serif"
+            class="border rounded-xl2 p-4 text-right transition ${FONT_NAME===f?'border-primary bg-primary/5':'border-line hover:border-primary'}">
+            <span class="block text-base font-semibold">${f}</span>
+            <span class="block text-sm text-muted mt-1">${esc(DB.clinic.name||'العيادة')} — كشف ومتابعة</span>
+          </button>`).join('')}
+      </div>`,
+  };
+
+  return `
+  <div class="max-w-4xl grid md:grid-cols-[210px_1fr] gap-5 items-start">
+    <nav role="tablist" aria-label="أقسام الإعدادات"
+         class="bg-white border border-line rounded-xl2 shadow-card p-2 flex md:flex-col gap-1 overflow-x-auto md:sticky md:top-20">
+      ${tabs.map(([k,label,ic])=>`
+        <a href="#/settings/${k}" role="tab" aria-selected="${SET_TAB===k}" onclick="event.preventDefault();setSettingsTab('${k}')"
+          class="whitespace-nowrap flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-right transition
+                 ${SET_TAB===k?'bg-primary/10 text-primary font-semibold':'text-muted hover:bg-canvas hover:text-ink'}">
+          ${ic}<span class="flex-1">${label}</span></a>`).join('')}
+    </nav>
+    <section role="tabpanel" class="bg-white border border-line rounded-xl2 shadow-card p-6 min-w-0 fade">
+      ${panels[SET_TAB]}
+    </section>
+  </div>`;
+}
+
+async function saveSettings(){
+  const payload = {
+    clinic: { name:$('#setName').value.trim(), spec:$('#setSpec').value.trim(), doctor:$('#setDoc').value.trim(),
+      phone:$('#setPhone').value.trim(), address:$('#setAddr').value.trim(), open:$('#setOpen').value, close:$('#setClose').value },
+    fees: Object.fromEntries([...document.querySelectorAll('[data-fee]')].map(i=>[i.dataset.fee, Number(i.value)||0])),
+  };
+  if (!payload.clinic.name) return toast('اسم العيادة مطلوب','err');
+  $('#setSave').disabled = true;
+  try {
+    const saved = await Sync.api('/clinic', { method:'PUT', body: payload });
+    Object.assign(DB.clinic, saved.clinic); DB.fees = saved.fees;
+    $('#sbClinic').textContent = DB.clinic.name;
+    toast('البيانات اتحفظت');
+    Sync.sync();
+  } catch (e) {
+    toast(e.offline ? 'تعديل الإعدادات محتاج نت — جرّب تاني لما يرجع' : e.message, 'err');
+  } finally {
+    const b = $('#setSave'); if (b) b.disabled = false;
+  }
+}
+
+/* ── فريق العيادة (صاحب العيادة، أونلاين فقط) ── */
+async function loadTeam(){
+  const box = $('#teamBox'); if (!box) return;
+  let users;
+  try { users = await Sync.api('/users'); }
+  catch (e) { box.innerHTML = `<p class="text-sm text-amber">${e.offline ? 'إدارة الحسابات محتاجة نت.' : esc(e.message)}</p>`; return; }
+  const roleSel = (u) => `<select onchange="updateUser(${u.id},{role:this.value})" ${u.isOwner?'disabled':''} class="field !py-1.5 !w-28 text-xs">
+      ${Object.entries(ROLE_LABEL).map(([k,v])=>`<option value="${k}" ${u.role===k?'selected':''}>${v}</option>`).join('')}</select>`;
+  box.innerHTML = `
+    <div class="divide-y divide-line border border-line rounded-xl2 overflow-hidden">
+      ${users.map(u=>`<div class="p-3 flex items-center gap-3 flex-wrap ${u.isActive?'':'opacity-50'}">
+        ${avatar(u.name,'w-8 h-8')}
+        <div class="min-w-0 flex-1"><p class="text-sm font-medium text-ink truncate">${esc(u.name)}${u.isOwner?' <span class="text-xs text-primary">· صاحب العيادة</span>':''}</p>
+          <p class="text-xs text-muted truncate" dir="ltr">${esc(u.email)}</p></div>
+        ${roleSel(u)}
+        ${u.isOwner ? '' : `<button onclick="updateUser(${u.id},{isActive:${!u.isActive}})" class="text-xs border border-line px-2.5 py-1.5 rounded-lg hover:border-primary hover:text-primary">${u.isActive?'إيقاف':'تفعيل'}</button>`}
+      </div>`).join('')}
+    </div>
+    <form onsubmit="addUser(event)" class="grid sm:grid-cols-2 gap-3 mt-5 border border-dashed border-line rounded-xl2 p-4 bg-canvas/40">
+      <p class="sm:col-span-2 text-sm font-semibold text-ink">إضافة حساب جديد</p>
+      <div><label class="lbl" for="nuName">الاسم</label><input id="nuName" required class="field"></div>
+      <div><label class="lbl" for="nuRole">الدور</label><select id="nuRole" class="field">
+        ${Object.entries(ROLE_LABEL).map(([k,v])=>`<option value="${k}" ${k==='nurse'?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div><label class="lbl" for="nuEmail">البريد</label><input id="nuEmail" type="email" required dir="ltr" class="field"></div>
+      <div><label class="lbl" for="nuPass">كلمة سر مبدئية</label><input id="nuPass" type="text" required minlength="8" dir="ltr" class="field"></div>
+      <div class="sm:col-span-2"><button class="bg-primary text-white text-sm font-medium px-4 py-2.5 rounded-xl2 hover:bg-primaryd">إضافة الحساب</button></div>
+    </form>`;
+}
+async function addUser(e){
+  e.preventDefault();
+  try {
+    await Sync.api('/users', { method:'POST', body:{ name:$('#nuName').value.trim(), email:$('#nuEmail').value.trim(),
+      password:$('#nuPass').value, role:$('#nuRole').value } });
+    toast('الحساب اتضاف — ابعتله البريد وكلمة السر'); loadTeam();
+  } catch (err) { toast(apiError(err), 'err'); }
+}
+async function updateUser(id, patch){
+  try { await Sync.api('/users/' + id, { method:'PATCH', body: patch }); toast('الحساب اتحدّث'); }
+  catch (err) { toast(apiError(err), 'err'); }
+  loadTeam();
+}
+function apiError(err){
+  if (err.offline) return 'العملية دي محتاجة نت';
+  const errors = err.body && err.body.errors;
+  return errors ? Object.values(errors)[0][0] : err.message;
+}
+
+/* ═══════════════ المودالات ═══════════════ */
+function openModal(html, wide){
+  $('#modalBox').className = `relative bg-white rounded-xl2 shadow-pop w-full ${wide?'max-w-3xl':'max-w-lg'} fade`;
+  $('#modalBox').innerHTML = html;
+  $('#modal').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){ $('#modal').classList.add('hidden'); document.body.style.overflow=''; }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+const modalHead = (title, sub) => `
+  <div class="p-5 border-b border-line flex items-start justify-between gap-4">
+    <div><h3 class="font-semibold">${title}</h3>${sub?`<p class="text-muted text-xs mt-0.5">${sub}</p>`:''}</div>
+    <button onclick="closeModal()" class="text-muted hover:text-ink p-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button></div>`;
+
+function toggleCustomDose(value){
+  const input=$('#tmDoseCustom');
+  input.classList.toggle('hidden',value!=='custom');
+  input.disabled=value!=='custom';
+  if(value==='custom') input.focus();
+}
+function quickAdd(){ patientSearchModal(); }
+
+/* حجز موعد */
+function bookModal(pid){
+  if (ROLE==='nurse') return openFile(pid);
+  if (!pid) return patientSearchModal();
+  const slots = [];
+  for (let h=10; h<=21; h++) ['00','30'].forEach(m=>slots.push(`${String(h).padStart(2,'0')}:${m}`));
+  openModal(`${modalHead('حجز موعد','اختار المريض والوقت المناسب')}
+    <div class="p-5 space-y-4">
+      <div><label class="lbl">المريض</label>
+        <select id="bkPid" class="field">
+          ${DB.patients.map(p=>`<option value="${p.id}" ${pid===p.id?'selected':''}>${esc(p.name)} — ${esc(p.phone)}</option>`).join('')}
+        </select>
+        <button onclick="closeModal();patientModal()" class="text-xs text-primary mt-2 hover:underline">المريض مش موجود؟ سجّله كحالة جديدة</button>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="lbl">التاريخ</label><input id="bkDate" type="date" value="${iso(TODAY)}" min="${iso(TODAY)}" class="field num"></div>
+        <div><label class="lbl">الوقت</label><select id="bkTime" class="field num">${slots.map(s=>`<option value="${s}">${fmtTime(s)}</option>`).join('')}</select></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="lbl">نوع الزيارة</label>
+          <select id="bkType" class="field" onchange="document.getElementById('bkFee').value=({'كشف':${DB.fees['كشف']},'استشارة':${DB.fees['استشارة']},'متابعة':${DB.fees['متابعة']}})[this.value]">
+            ${Object.keys(DB.fees).map(t=>`<option>${t}</option>`).join('')}</select></div>
+        <div><label class="lbl">الرسوم (جنيه)</label><input id="bkFee" type="number" min="0" step="0.01" value="${patient(pid).visitFee ?? DB.fees['كشف']}" class="field num"></div>
+      </div>
+    </div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>
+      <button onclick="saveAppt()" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">تأكيد الحجز</button>
+    </div>`);
+}
+function saveAppt(){
+  const fee=readVisitFee('#bkFee');
+  if (fee===null) return;
+  const pid = Number($('#bkPid').value), date = $('#bkDate').value, time = $('#bkTime').value;
+  if (!date) return toast('اختار تاريخ الموعد الأول','err');
+  const clash = DB.appts.find(a=>a.date===date && a.time===time && a.status!=='ملغي');
+  if (clash) return toast('الميعاد ده محجوز لـ '+patient(clash.pid).name,'warn');
+  DB.appts.push({ id:Sync.newId(), pid, date, time, type:$('#bkType').value,
+                  status:'محجوز', fee, paid:false, method:'' });
+  closeModal(); toast('الموعد اتحجز لـ '+patient(pid).name); go(PAGE);
+}
+
+/* مريض جديد */
+function patientModal(searched=false){
+  if (!searched) return patientSearchModal();
+  openModal(`${modalHead('تسجيل مريض جديد','البيانات الأساسية بس — الباقي بيتكمل مع أول كشف')}
+    <div class="p-5 grid sm:grid-cols-2 gap-4">
+      <div class="sm:col-span-2"><label class="lbl">الاسم بالكامل</label><input id="npName" class="field" placeholder="مثال: أحمد محمود علي"></div>
+      <div><label class="lbl">رقم التليفون</label><input id="npPhone" class="field num" placeholder="01xxxxxxxxx"></div>
+      <div><label class="lbl">السن</label><input id="npAge" type="number" class="field num" placeholder="35"></div>
+      <div><label class="lbl">النوع</label><select id="npGender" class="field"><option>ذكر</option><option>أنثى</option></select></div>
+      <div><label class="lbl">فصيلة الدم</label><select id="npBlood" class="field num">${['A+','A-','B+','B-','O+','O-','AB+','AB-','غير معروفة'].map(b=>`<option>${b}</option>`).join('')}</select></div>
+      <div class="sm:col-span-2"><label class="lbl" for="npFee">سعر الكشف (جنيه)</label><input id="npFee" type="number" min="0" step="0.01" required class="field num" value="${DB.fees['كشف']}"></div>
+      <div class="sm:col-span-2"><label class="lbl">أمراض مزمنة أو حساسية</label><input id="npChronic" class="field" placeholder="اكتب لا يوجد لو مفيش"></div>
+    </div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>
+      <button onclick="savePatient()" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">حفظ وفتح الملف</button>
+    </div>`);
+}
+function readVisitFee(selector){
+  const input=$(selector), raw=input.value.trim(), fee=Number(raw);
+  if (!raw || !Number.isFinite(fee) || fee<0 || !input.checkValidity()) {
+    toast('أدخل سعر كشف صحيح يساوي صفر أو أكثر','err'); input.focus(); return null;
+  }
+  return fee;
+}
+function savePatient(){
+  const fee = readVisitFee('#npFee');
+  if (fee===null) return;
+  const name = $('#npName').value.trim(), phone = $('#npPhone').value.trim();
+  if (!name) return toast('اكتب اسم المريض','err');
+  if (!phone) return toast('رقم التليفون مطلوب للتواصل','err');
+  const duplicate = DB.patients.find(p=>normalizeSearch(p.name)===normalizeSearch(name) && normalizeSearch(p.phone)===normalizeSearch(phone));
+  if (duplicate) { openFile(duplicate.id); return toast('المريض مسجل بالفعل — تم فتح ملفه','warn'); }
+  const p = { id:Sync.newId(), name, phone, visitFee:fee, age:Number($('#npAge').value)||0,
+    gender:$('#npGender').value, blood:$('#npBlood').value,
+    chronic:$('#npChronic').value.trim()||'لا يوجد', created:iso(TODAY) };
+  DB.patients.push(p); closeModal(); toast('المريض اتسجّل'); openFile(p.id);
+}
+
+/* ═══════════════ صفحة ملف المريض ═══════════════ */
+const FILE_KINDS = ['أشعة','تحليل','تقرير طبي','روشتة','مستند آخر'];
+const fmtSize = b => b < 1024*1024 ? Math.round(b/1024)+' ك.ب' : (b/1048576).toFixed(1)+' م.ب';
+let CURRENT_PID = null, pTab = 'overview';
+
+function openFile(pid, tab){
+  CURRENT_PID = pid; pTab = tab || 'overview';
+  closeModal(); go('patient');
+}
+function setPTab(t){ pTab = t; go('patient'); }
+
+function patientPage(){
+  const pid = CURRENT_PID, p = patient(pid);
+  const recs  = DB.records.filter(r=>r.pid===pid).sort((a,b)=>b.date.localeCompare(a.date));
+  const meds  = DB.treatments.filter(t=>t.pid===pid);
+  const files = DB.files.filter(f=>f.pid===pid).sort((a,b)=>b.id-a.id);
+  const appts = DB.appts.filter(a=>a.pid===pid).sort((a,b)=>b.date.localeCompare(a.date));
+  const paidSum = appts.filter(a=>a.paid).reduce((s,a)=>s+a.fee,0);
+  const dueSum  = appts.filter(a=>!a.paid && a.status!=='ملغي').reduce((s,a)=>s+a.fee,0);
+  const done    = appts.filter(a=>a.status==='تم الكشف');
+  const lastVisit = done[0], nextAppt = appts.filter(a=>a.date>=iso(TODAY)&&a.status==='محجوز').pop();
+
+  const tabs = [
+    ['overview','نظرة عامة',''],
+    ['plan','خطة العلاج', meds.filter(m=>m.active).length],
+    ['records','الكشوفات والتشخيص', recs.length],
+    ['files','الأشعة والملفات', files.length],
+    ['visits','المواعيد والفواتير', appts.length],
+  ];
+
+  return `
+  <div class="space-y-5">
+    <button onclick="go('patients')" class="inline-flex items-center gap-2 text-sm text-muted hover:text-primary transition">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-4 h-4"><path d="M9 6l6 6-6 6"/></svg>
+      رجوع لسجل المرضى
+    </button>
+
+    <!-- ترويسة الملف -->
+    <section class="bg-deep text-white rounded-xl2 p-6 relative overflow-hidden">
+      <div class="absolute -left-24 -top-24 w-72 h-72 rounded-full bg-primary/25 blur-3xl"></div>
+      <div class="relative flex flex-wrap items-start gap-5">
+        <span class="w-16 h-16 rounded-2xl bg-white/10 grid place-items-center text-xl font-bold shrink-0">${esc(initials(p.name))}</span>
+        <div class="flex-1 min-w-[220px]">
+          <h2 class="text-2xl font-bold">${esc(p.name)}</h2>
+          <p class="text-white/60 text-sm mt-1 num">${esc(p.phone)} · ${p.age} سنة · ${p.gender} · فصيلة ${p.blood}</p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span class="text-xs bg-rose/20 text-white px-2.5 py-1 rounded-full">${esc(p.chronic)}</span>
+            <span class="text-xs bg-white/10 px-2.5 py-1 rounded-full num">رقم الملف: ${fileNo(p)}</span>
+            <span class="text-xs bg-white/10 px-2.5 py-1 rounded-full">مسجّل من ${fmtShort(p.created)}</span>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          ${ROLE==='doctor'?`<button onclick="recordModal(${pid})" class="bg-white text-deep text-sm font-medium px-4 py-2.5 rounded-xl2 hover:bg-white/90">تسجيل كشف</button>`:''}
+          <button onclick="bookModal(${pid})" class="border border-white/25 text-sm px-4 py-2.5 rounded-xl2 hover:bg-white/10">حجز موعد</button>
+          <button onclick="pickFiles(${pid})" class="border border-white/25 text-sm px-4 py-2.5 rounded-xl2 hover:bg-white/10">رفع ملف</button>
+          <button onclick="editPatient(${pid})" class="border border-white/25 text-sm px-4 py-2.5 rounded-xl2 hover:bg-white/10">تعديل البيانات</button>
+          <button onclick="printProfile(${pid})" class="border border-white/25 text-sm px-4 py-2.5 rounded-xl2 hover:bg-white/10">طباعة الملف</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid xl:grid-cols-[1fr_300px] gap-5 items-start">
+      <div class="space-y-5">
+        <!-- التبويبات -->
+        <div class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+          <div class="flex gap-1 px-3 pt-3 border-b border-line overflow-x-auto">
+            ${tabs.map(([k,label,n])=>`
+              <a href="#/patient/${pid}/${k}" onclick="event.preventDefault();setPTab('${k}')"
+                class="whitespace-nowrap inline-block px-4 py-2.5 text-sm rounded-t-lg transition ${pTab===k?'text-primary font-semibold border-b-2 border-primary -mb-px':'text-muted hover:text-ink'}">
+                ${label}${n?` <span class="num text-xs">(${n})</span>`:''}</a>`).join('')}
+          </div>
+          <div class="p-5">
+            ${ pTab==='overview' ? overviewTab(pid, recs, meds, files, done, lastVisit)
+             : pTab==='plan'     ? planTab(pid, meds)
+             : pTab==='records'  ? recordsTab(pid, recs)
+             : pTab==='files'    ? filesTab(pid, files)
+             : visitsTab(pid, appts, paidSum, dueSum) }
+          </div>
+        </div>
+      </div>
+
+      <!-- العمود الجانبي -->
+      <aside class="space-y-5">
+        <section class="bg-white border border-line rounded-xl2 shadow-card p-5">
+          <h3 class="font-semibold text-sm">مؤشرات سريعة</h3>
+          <dl class="grid grid-cols-2 gap-3 mt-4">
+            <div class="bg-canvas rounded-xl2 p-3"><dt class="text-[.7rem] text-muted">زيارات تمت</dt><dd class="text-xl font-bold num mt-0.5">${done.length}</dd></div>
+            <div class="bg-canvas rounded-xl2 p-3"><dt class="text-[.7rem] text-muted">أدوية حالية</dt><dd class="text-xl font-bold num mt-0.5">${meds.filter(m=>m.active).length}</dd></div>
+            <div class="bg-canvas rounded-xl2 p-3"><dt class="text-[.7rem] text-muted">ملفات مرفوعة</dt><dd class="text-xl font-bold num mt-0.5">${files.length}</dd></div>
+            <div class="bg-canvas rounded-xl2 p-3"><dt class="text-[.7rem] text-muted">إجمالي المدفوع</dt><dd class="text-xl font-bold num mt-0.5">${money(paidSum)}</dd></div>
+          </dl>
+          ${dueSum?`<p class="text-xs text-rose mt-3 bg-rose/5 rounded-lg p-2.5">عليه مستحقات <span class="num font-semibold">${money(dueSum)}</span> جنيه</p>`:''}
+        </section>
+
+        <section class="bg-white border border-line rounded-xl2 shadow-card p-5">
+          <h3 class="font-semibold text-sm">العلامات الحيوية</h3>
+          <p class="text-xs text-muted mt-1">آخر قياس ${p.vitalsDate?fmtShort(p.vitalsDate):'— لم يسجّل'}</p>
+          <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
+            <div><p class="text-[.7rem] text-muted">الضغط</p><p class="font-semibold num">${esc(p.bp||'—')}</p></div>
+            <div><p class="text-[.7rem] text-muted">السكر</p><p class="font-semibold num">${esc(p.sugar||'—')}</p></div>
+            <div><p class="text-[.7rem] text-muted">الوزن</p><p class="font-semibold num">${p.weight?p.weight+' كجم':'—'}</p></div>
+            <div><p class="text-[.7rem] text-muted">الطول</p><p class="font-semibold num">${p.height?p.height+' سم':'—'}</p></div>
+          </div>
+          <button onclick="vitalsModal(${pid})" class="w-full mt-4 text-sm border border-line py-2 rounded-xl2 hover:border-primary hover:text-primary transition">تسجيل قياس جديد</button>
+        </section>
+
+        <section class="bg-white border border-line rounded-xl2 shadow-card p-5">
+          <h3 class="font-semibold text-sm">مواعيد وملاحظات</h3>
+          <div class="mt-4 space-y-3 text-sm">
+            <div class="flex items-start gap-2.5">
+              <span class="w-8 h-8 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-4 h-4">${ICON.appts}</svg></span>
+              <div><p class="text-xs text-muted">الموعد الجاي</p>
+              <p class="font-medium">${nextAppt?`${fmtShort(nextAppt.date)} — ${fmtTime(nextAppt.time)}`:'مفيش موعد محجوز'}</p></div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="w-8 h-8 rounded-lg bg-mint/10 text-mint grid place-items-center shrink-0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-4 h-4">${ICON.records}</svg></span>
+              <div><p class="text-xs text-muted">آخر زيارة</p>
+              <p class="font-medium">${lastVisit?fmtShort(lastVisit.date):'أول زيارة لسه ما تمتش'}</p></div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <label class="lbl">ملاحظات إدارية</label>
+            <textarea id="pNote" rows="3" class="field text-sm" placeholder="ملاحظة عن الحالة أو التواصل معها">${esc(p.note||'')}</textarea>
+            <button onclick="saveNote(${pid})" class="mt-2 text-sm text-primary hover:underline">حفظ الملاحظة</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>`;
+}
+
+/* ── نظرة عامة ── */
+function overviewTab(pid, recs, meds, files, done, lastVisit){
+  const active = meds.filter(m=>m.active);
+  const last = recs[0];
+  return `
+  <div class="space-y-6">
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="border border-line rounded-xl2 p-4">
+        <p class="text-xs text-muted">آخر تشخيص</p>
+        <p class="font-semibold mt-1">${last?esc(last.diagnosis):'لسه مفيش كشف مسجّل'}</p>
+        ${last?`<p class="text-sm text-muted mt-2 leading-relaxed">${esc(last.complaint)}</p>
+        <p class="text-xs text-muted mt-2 num">${fmtDate(last.date)}</p>`:''}
+      </div>
+      <div class="border border-line rounded-xl2 p-4">
+        <p class="text-xs text-muted">الحالة المزمنة والحساسية</p>
+        <p class="font-semibold mt-1">${esc(patient(pid).chronic)}</p>
+        <p class="text-sm text-muted mt-2">${patient(pid).allergy?esc(patient(pid).allergy):'مفيش حساسية مسجّلة من أدوية.'}</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="text-sm font-semibold">العلاج الحالي</h4>
+        <button onclick="setPTab('plan')" class="text-xs text-primary hover:underline">فتح الخطة كاملة</button>
+      </div>
+      ${active.length ? `<div class="grid sm:grid-cols-2 gap-3">${active.slice(0,4).map(m=>`
+        <div class="border border-line rounded-xl2 p-3 flex gap-3">
+          <span class="w-8 h-8 rounded-lg bg-mint/10 text-mint grid place-items-center shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-4 h-4"><path d="m10.5 20.5-7-7a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m7 10 7 7"/></svg></span>
+          <div class="min-w-0"><p class="text-sm font-medium truncate">${esc(m.drug)}</p>
+          <p class="text-xs text-muted">${esc(m.dose)}</p></div>
+        </div>`).join('')}</div>`
+      : '<p class="text-sm text-muted">مفيش أدوية شغالة للحالة دي دلوقتي.</p>'}
+    </div>
+
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="text-sm font-semibold">آخر الملفات المرفوعة</h4>
+        <button onclick="setPTab('files')" class="text-xs text-primary hover:underline">كل الملفات</button>
+      </div>
+      ${files.length ? `<div class="flex flex-wrap gap-2">${files.slice(0,6).map(f=>fileChip(f)).join('')}</div>`
+        : `<button onclick="pickFiles(${pid})" class="text-sm text-primary hover:underline">لسه مفيش ملفات — ارفع أشعة أو تحليل</button>`}
+    </div>
+  </div>`;
+}
+
+/* ── الكشوفات ── */
+function recordsTab(pid, recs){
+  return `
+  <div class="space-y-4">
+    ${ROLE==='doctor'?`<button onclick="recordModal(${pid})" class="bg-primary text-white text-sm px-4 py-2.5 rounded-xl2 hover:bg-primaryd">تسجيل كشف جديد</button>`:''}
+    ${recs.length ? recs.map(r=>{
+      const rf = DB.files.filter(f=>f.rid===r.id);
+      return `<article class="border border-line rounded-xl2 overflow-hidden">
+        <div class="px-4 py-3 bg-canvas/50 border-b border-line flex items-center justify-between gap-3">
+          <p class="font-medium text-sm">${esc(r.diagnosis)}</p>
+          <span class="text-xs text-muted num whitespace-nowrap">${fmtDate(r.date)}</span>
+        </div>
+        <div class="p-4 grid sm:grid-cols-2 gap-4 text-sm">
+          <div><p class="text-xs text-muted mb-1">الشكوى</p><p class="leading-relaxed">${esc(r.complaint)}</p></div>
+          <div><p class="text-xs text-muted mb-1">المتابعة</p><p>${esc(r.next||'حسب الحاجة')}</p></div>
+          <div class="sm:col-span-2"><p class="text-xs text-muted mb-1">العلاج الموصوف</p>
+            <p class="leading-relaxed whitespace-pre-line border-r-2 border-primary/30 pr-3">${esc(r.rx)}</p></div>
+          ${r.tests?`<div class="sm:col-span-2"><p class="text-xs text-muted mb-1">تحاليل وأشعة مطلوبة</p><p>${esc(r.tests)}</p></div>`:''}
+          ${rf.length?`<div class="sm:col-span-2"><p class="text-xs text-muted mb-2">مرفقات الكشف</p>
+            <div class="flex flex-wrap gap-2">${rf.map(f=>fileChip(f)).join('')}</div></div>`:''}
+        </div>
+        <div class="px-4 py-3 border-t border-line flex gap-2">
+          <button onclick="printRx(${r.id})" class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary">طباعة الروشتة</button>
+          <button onclick="pickFiles(${pid}, ${r.id})" class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary">إرفاق ملف للكشف</button>
+        </div>
+      </article>`;}).join('')
+    : '<p class="text-sm text-muted">لسه مفيش كشف مسجّل للحالة دي.</p>'}
+  </div>`;
+}
+
+/* ── خطة العلاج ── */
+function planTab(pid, meds){
+  const active = meds.filter(m=>m.active), past = meds.filter(m=>!m.active);
+  const row = m => `
+    <div class="border border-line rounded-xl2 p-4 ${m.active?'':'opacity-60'}">
+      <div class="flex items-start gap-3">
+        <span class="w-9 h-9 rounded-xl2 ${m.active?'bg-mint/10 text-mint':'bg-canvas text-muted'} grid place-items-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-4 h-4">
+            <path d="m10.5 20.5-7-7a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m7 10 7 7"/></svg>
+        </span>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-sm">${esc(m.drug)}</p>
+          <p class="text-sm text-muted mt-0.5">${esc(m.dose)}</p>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted">
+            <span>المدة: ${esc(m.duration||'—')}</span>
+            <span class="num">بدأ ${fmtShort(m.start)}</span>
+          </div>
+          ${m.note?`<p class="text-xs mt-2 bg-canvas rounded-lg p-2.5 leading-relaxed">${esc(m.note)}</p>`:''}
+        </div>
+        ${ROLE==='doctor'?`<div class="flex flex-col gap-1.5 shrink-0">
+          <button onclick="toggleMed(${m.id},${pid})" class="text-xs border border-line px-2.5 py-1 rounded-lg hover:border-primary hover:text-primary">${m.active?'إيقاف':'استئناف'}</button>
+          <button onclick="deleteMed(${m.id},${pid})" class="text-xs text-muted hover:text-rose px-2.5 py-1">حذف</button>
+        </div>`:''}
+      </div>
+    </div>`;
+
+  return `
+  <div class="space-y-6">
+    ${ROLE==='doctor' ? `
+    <div class="border border-dashed border-line rounded-xl2 p-4 bg-canvas/40">
+      <h4 class="text-sm font-semibold mb-3">إضافة دواء للخطة</h4>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div class="sm:col-span-2"><label class="lbl">اسم الدواء والتركيز</label>
+          <input id="tmDrug" class="field" placeholder="مثال: أوجمنتين ١جم"></div>
+        <div><label class="lbl" for="tmDose">الجرعة</label><select id="tmDose" class="field" onchange="toggleCustomDose(this.value)"><option value="">اختر الجرعة</option>${['قرص مرة يومياً','قرص كل ١٢ ساعة','قرص كل ٨ ساعات','قرص كل ٦ ساعات','نصف قرص يومياً','قرص قبل الأكل','قرص بعد الأكل','قرص عند اللزوم'].map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('')}<option value="custom">أخرى — اكتب الجرعة</option></select><input id="tmDoseCustom" class="field mt-2 hidden" aria-label="جرعة أخرى" placeholder="اكتب الجرعة" disabled></div>
+        <div><label class="lbl">المدة</label><input id="tmDur" class="field" placeholder="٧ أيام"></div>
+        <div class="sm:col-span-2"><label class="lbl">تعليمات للمريض</label>
+          <input id="tmNote" class="field" placeholder="اختياري — قبل الأكل، تجنب الألبان..."></div>
+      </div>
+      <button onclick="addMed(${pid})" class="mt-3 bg-primary text-white text-sm px-4 py-2 rounded-xl2 hover:bg-primaryd">إضافة للخطة</button>
+    </div>` : ''}
+
+    <div>
+      <h4 class="text-sm font-semibold mb-3">أدوية حالية <span class="num text-muted font-normal">(${active.length})</span></h4>
+      ${active.length ? `<div class="space-y-3">${active.map(row).join('')}</div>`
+        : '<p class="text-sm text-muted">مفيش أدوية شغالة دلوقتي للحالة دي.</p>'}
+    </div>
+
+    ${past.length ? `<div>
+      <h4 class="text-sm font-semibold mb-3">أدوية متوقفة <span class="num text-muted font-normal">(${past.length})</span></h4>
+      <div class="space-y-3">${past.map(row).join('')}</div>
+    </div>` : ''}
+  </div>`;
+}
+
+function addMed(pid){
+  const drug = $('#tmDrug').value.trim(), dose = ($('#tmDose').value==='custom' ? $('#tmDoseCustom').value : $('#tmDose').value).trim();
+  if (!drug) return toast('اكتب اسم الدواء','err');
+  if (!dose) return toast('الجرعة مطلوبة عشان المريض يعرف ياخده إزاي','err');
+  DB.treatments.push({ id:Sync.newId(), pid, drug, dose, duration:$('#tmDur').value.trim(),
+    start:iso(TODAY), note:$('#tmNote').value.trim(), active:true });
+  toast('الدواء اتضاف لخطة العلاج'); setPTab('plan');
+}
+function toggleMed(id, pid){
+  const m = DB.treatments.find(x=>x.id===id);
+  m.active = !m.active;
+  toast(m.active ? 'الدواء رجع للخطة' : 'الدواء اتوقف', m.active?'ok':'warn');
+  setPTab('plan');
+}
+function deleteMed(id, pid){
+  DB.treatments = DB.treatments.filter(x=>x.id!==id);
+  toast('الدواء اتشال من الخطة','warn'); setPTab('plan');
+}
+
+/* ── المواعيد والفواتير ── */
+function visitsTab(pid, appts, paidSum, dueSum){
+  return `
+  <div class="space-y-5">
+    <div class="grid sm:grid-cols-3 gap-3">
+      <div class="bg-canvas rounded-xl2 p-4"><p class="text-xs text-muted">إجمالي المواعيد</p><p class="text-2xl font-bold num mt-1">${appts.length}</p></div>
+      <div class="bg-canvas rounded-xl2 p-4"><p class="text-xs text-muted">مدفوع</p><p class="text-2xl font-bold num mt-1 text-mint">${money(paidSum)}</p></div>
+      <div class="bg-canvas rounded-xl2 p-4"><p class="text-xs text-muted">مستحق</p><p class="text-2xl font-bold num mt-1 ${dueSum?'text-rose':''}">${money(dueSum)}</p></div>
+    </div>
+    ${appts.length ? `<div class="border border-line rounded-xl2 overflow-hidden">
+      ${table(['التاريخ','الوقت','النوع','الحالة','الرسوم',''],
+        appts.map(a=>`<tr class="border-t border-line first:border-0">
+          <td class="py-3 px-4 text-sm num">${fmtShort(a.date)}</td>
+          <td class="py-3 px-4 text-sm num">${fmtTime(a.time)}</td>
+          <td class="py-3 px-4 text-sm text-muted">${a.type}</td>
+          <td class="py-3 px-4">${badge(a.status)}</td>
+          <td class="py-3 px-4 text-sm num">${money(a.fee)} ج
+            ${a.paid?`<span class="text-mint text-xs mr-1">${a.method}</span>`:'<span class="text-rose text-xs mr-1">غير مدفوع</span>'}</td>
+          <td class="py-3 px-4 text-left">
+            ${a.paid?`<button onclick="printInvoice(${a.id})" class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary">فاتورة</button>`
+              :`<button onclick="payModal(${a.id})" class="text-xs bg-primary text-white px-3 py-1.5 rounded-lg">تحصيل</button>`}
+          </td></tr>`).join(''),'')}
+    </div>` : '<p class="text-sm text-muted">مفيش مواعيد مسجّلة.</p>'}
+  </div>`;
+}
+
+/* ── الملفات والأشعة ── */
+const isImg = f => f.mime.startsWith('image/');
+function fileChip(f){
+  return `<button onclick="viewFile(${f.id})" class="inline-flex items-center gap-1.5 text-xs bg-canvas border border-line px-2.5 py-1.5 rounded-lg hover:border-primary hover:text-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-3.5 h-3.5">
+      ${isImg(f)?'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m4 17 5-4 4 3 3-2 4 3"/>':'<path d="M6 3h9l5 5v13H6z"/><path d="M14 3v5h5"/>'}
+    </svg>${esc(f.kind)}</button>`;
+}
+function pickFiles(pid, rid){
+  const i = document.createElement('input');
+  i.type='file'; i.multiple=true; i.accept='image/*,.pdf';
+  i.onchange = () => handleUpload(pid, i.files, rid);
+  i.click();
+}
+function handleUpload(pid, fileList, rid){
+  const list = withinUploadLimit(fileList);
+  if (!list.length) return;
+  let done = 0;
+  list.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      DB.files.push({ id:Sync.newId(), pid, rid: rid||null, name:file.name, mime:file.type||'application/pdf',
+        size:file.size, data:e.target.result, kind:guessKind(file.name), note:'', date:iso(TODAY) });
+      if (++done === list.length){
+        toast(list.length + ' ملف اترفع بنجاح');
+        if (PAGE==='patient') setPTab(rid ? 'records' : 'files');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+const MAX_UPLOAD_MB = 20;
+function withinUploadLimit(fileList){
+  const all = [...fileList], ok = all.filter(f=>f.size <= MAX_UPLOAD_MB*1048576);
+  if (ok.length < all.length) toast(`في ملفات أكبر من ${MAX_UPLOAD_MB} ميجا ومش هتترفع`,'err');
+  return ok;
+}
+function guessKind(name){
+  const n = name.toLowerCase();
+  if (/x.?ray|أشعة|ct|mri|scan|sono|echo/.test(n)) return 'أشعة';
+  if (/lab|test|تحليل|blood|cbc/.test(n)) return 'تحليل';
+  if (/report|تقرير/.test(n)) return 'تقرير طبي';
+  return 'مستند آخر';
+}
+
+function filesTab(pid, files){
+  return `
+  <div class="space-y-5">
+    <div onclick="pickFiles(${pid})" ondragover="event.preventDefault();this.classList.add('border-primary','bg-primary/5')"
+         ondragleave="this.classList.remove('border-primary','bg-primary/5')"
+         ondrop="event.preventDefault();this.classList.remove('border-primary','bg-primary/5');handleUpload(${pid}, event.dataTransfer.files)"
+         class="border-2 border-dashed border-line rounded-xl2 p-8 text-center cursor-pointer hover:border-primary transition">
+      <span class="w-12 h-12 rounded-full bg-primary/10 text-primary grid place-items-center mx-auto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-5 h-5">
+          <path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      </span>
+      <p class="font-medium text-sm mt-3">اسحب ملفات الأشعة والتحاليل هنا</p>
+      <p class="text-xs text-muted mt-1">أو اضغط للاختيار من الجهاز — صور و PDF</p>
+    </div>
+
+    ${files.length ? `<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      ${files.map(f=>`
+        <div class="border border-line rounded-xl2 overflow-hidden group">
+          <button onclick="viewFile(${f.id})" class="block w-full h-32 bg-canvas overflow-hidden">
+            ${isImg(f) ? `<img src="${f.data}" alt="${esc(f.name)}" class="w-full h-full object-cover group-hover:scale-105 transition">`
+              : `<span class="w-full h-full grid place-items-center text-rose">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" class="w-10 h-10">
+                    <path d="M6 3h9l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 14h6M9 17h4"/></svg></span>`}
+          </button>
+          <div class="p-3">
+            <div class="flex items-center gap-2">
+              <select onchange="DB.files.find(x=>x.id===${f.id}).kind=this.value;toast('التصنيف اتحدّث')"
+                      class="text-xs bg-primary/10 text-primary rounded-lg px-2 py-1 border-0">
+                ${FILE_KINDS.map(k=>`<option ${f.kind===k?'selected':''}>${k}</option>`).join('')}
+              </select>
+              <span class="text-[.7rem] text-muted num mr-auto">${fmtSize(f.size)}</span>
+            </div>
+            <p class="text-xs mt-2 truncate" title="${esc(f.name)}">${esc(f.name)}</p>
+            <p class="text-[.7rem] text-muted num mt-0.5">${fmtShort(f.date)}${f.rid?' · مرتبط بكشف':''}</p>
+            <div class="flex gap-2 mt-2.5">
+              <button onclick="viewFile(${f.id})" class="flex-1 text-xs border border-line py-1.5 rounded-lg hover:border-primary hover:text-primary">عرض</button>
+              <button onclick="downloadFile(${f.id})" class="flex-1 text-xs border border-line py-1.5 rounded-lg hover:border-primary hover:text-primary">تنزيل</button>
+              <button onclick="deleteFile(${f.id},${pid})" class="text-xs text-muted hover:text-rose px-2">حذف</button>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>` : '<p class="text-sm text-muted text-center">مفيش ملفات مرفوعة للحالة دي لحد دلوقتي.</p>'}
+  </div>`;
+}
+
+function viewFile(id){
+  const f = DB.files.find(x=>x.id===id);
+  if (isImg(f)){
+    const lb = document.createElement('div');
+    lb.className = 'fixed inset-0 z-[70] bg-ink/90 grid place-items-center p-6 fade';
+    lb.onclick = () => lb.remove();
+    lb.innerHTML = `<div class="max-w-4xl w-full text-center" onclick="event.stopPropagation()">
+      <img src="${f.data}" class="max-h-[78vh] mx-auto rounded-xl2 shadow-pop">
+      <div class="mt-4 flex items-center justify-center gap-3 text-white">
+        <span class="text-sm">${esc(f.kind)} — ${esc(f.name)}</span>
+        <button onclick="downloadFile(${f.id})" class="text-sm border border-white/30 px-3 py-1.5 rounded-lg hover:bg-white/10">تنزيل</button>
+        <button onclick="this.closest('.fixed').remove()" class="text-sm bg-white text-ink px-3 py-1.5 rounded-lg">إغلاق</button>
+      </div></div>`;
+    document.body.appendChild(lb);
+  } else downloadFile(id);
+}
+function downloadFile(id){
+  const f = DB.files.find(x=>x.id===id);
+  const a = document.createElement('a'); a.href = f.data; a.download = f.name; a.click();
+}
+function deleteFile(id, pid){
+  DB.files = DB.files.filter(x=>x.id!==id);
+  toast('الملف اتمسح','warn'); setPTab('files');
+}
+
+/* ── تعديل بيانات المريض والعلامات الحيوية ── */
+function editPatient(pid){
+  const p = patient(pid);
+  openModal(`${modalHead('تعديل بيانات المريض', esc(p.name))}
+    <div class="p-5 grid sm:grid-cols-2 gap-4">
+      <div class="sm:col-span-2"><label class="lbl">الاسم بالكامل</label><input id="epName" class="field" value="${esc(p.name)}"></div>
+      <div><label class="lbl">رقم التليفون</label><input id="epPhone" class="field num" value="${esc(p.phone)}"></div>
+      <div><label class="lbl">السن</label><input id="epAge" type="number" class="field num" value="${p.age}"></div>
+      <div><label class="lbl">النوع</label><select id="epGender" class="field">
+        ${['ذكر','أنثى'].map(g=>`<option ${p.gender===g?'selected':''}>${g}</option>`).join('')}</select></div>
+      <div><label class="lbl">فصيلة الدم</label><select id="epBlood" class="field num">
+        ${['A+','A-','B+','B-','O+','O-','AB+','AB-','غير معروفة'].map(b=>`<option ${p.blood===b?'selected':''}>${b}</option>`).join('')}</select></div>
+      <div class="sm:col-span-2"><label class="lbl">أمراض مزمنة</label><input id="epChronic" class="field" value="${esc(p.chronic)}"></div>
+      <div class="sm:col-span-2"><label class="lbl">حساسية من أدوية</label>
+        <input id="epAllergy" class="field" value="${esc(p.allergy||'')}" placeholder="مثال: بنسلين، أسبرين"></div>
+    </div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>
+      <button onclick="saveEdit(${pid})" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">حفظ التعديلات</button>
+    </div>`);
+}
+function saveEdit(pid){
+  const p = patient(pid);
+  p.name = $('#epName').value.trim() || p.name;
+  p.phone = $('#epPhone').value.trim();
+  p.age = Number($('#epAge').value) || p.age;
+  p.gender = $('#epGender').value; p.blood = $('#epBlood').value;
+  p.chronic = $('#epChronic').value.trim() || 'لا يوجد';
+  p.allergy = $('#epAllergy').value.trim();
+  closeModal(); toast('البيانات اتحدّثت'); go('patient');
+}
+function vitalsModal(pid){
+  const p = patient(pid);
+  openModal(`${modalHead('تسجيل العلامات الحيوية', esc(p.name))}
+    <div class="p-5 grid grid-cols-2 gap-4">
+      <div><label class="lbl">الضغط</label><input id="vBp" class="field num" value="${esc(p.bp||'')}" placeholder="120/80"></div>
+      <div><label class="lbl">السكر</label><input id="vSugar" class="field num" value="${esc(p.sugar||'')}" placeholder="110 mg/dl"></div>
+      <div><label class="lbl">الوزن (كجم)</label><input id="vWeight" type="number" class="field num" value="${p.weight||''}"></div>
+      <div><label class="lbl">الطول (سم)</label><input id="vHeight" type="number" class="field num" value="${p.height||''}"></div>
+    </div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>
+      <button onclick="saveVitals(${pid})" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">حفظ القياس</button>
+    </div>`);
+}
+function saveVitals(pid){
+  const p = patient(pid);
+  p.bp = $('#vBp').value.trim(); p.sugar = $('#vSugar').value.trim();
+  p.weight = Number($('#vWeight').value)||''; p.height = Number($('#vHeight').value)||'';
+  p.vitalsDate = iso(TODAY);
+  closeModal(); toast('القياس اتسجّل'); go('patient');
+}
+function saveNote(pid){
+  patient(pid).note = $('#pNote').value.trim();
+  toast('الملاحظة اتحفظت');
+}
+
+/* طباعة ملف المريض كامل */
+function printProfile(pid){
+  const p = patient(pid);
+  const recs = DB.records.filter(r=>r.pid===pid).sort((a,b)=>b.date.localeCompare(a.date));
+  const meds = DB.treatments.filter(t=>t.pid===pid && t.active);
+  const files = DB.files.filter(f=>f.pid===pid);
+  printSheet(`<div style="font-family:${FONT},sans-serif;direction:rtl;padding:14mm">
+    ${printHead()}
+    <h2 style="font-size:18px;margin:0 0 4px">الملف الطبي — ${esc(p.name)}</h2>
+    <p style="font-size:13px;color:#5B7185;margin:0 0 20px">${p.age} سنة · ${p.gender} · فصيلة ${p.blood} · ${esc(p.phone)}</p>
+    <p style="font-size:14px;margin:0 0 6px"><b>الحالة المزمنة:</b> ${esc(p.chronic)}</p>
+    <p style="font-size:14px;margin:0 0 6px"><b>الحساسية:</b> ${esc(p.allergy||'لا يوجد')}</p>
+    <p style="font-size:14px;margin:0 0 20px"><b>آخر قياس:</b> ضغط ${esc(p.bp||'—')} · سكر ${esc(p.sugar||'—')} · وزن ${p.weight||'—'} · طول ${p.height||'—'}</p>
+    <h3 style="font-size:15px;border-bottom:1px solid #DCE6EE;padding-bottom:6px">العلاج الحالي</h3>
+    ${meds.length?`<ul style="font-size:14px;line-height:1.9;padding-right:18px">${meds.map(m=>`<li>${esc(m.drug)} — ${esc(m.dose)} (${esc(m.duration||'—')})</li>`).join('')}</ul>`:'<p style="font-size:14px">لا يوجد</p>'}
+    <h3 style="font-size:15px;border-bottom:1px solid #DCE6EE;padding-bottom:6px;margin-top:20px">تاريخ الكشوفات</h3>
+    ${recs.length?recs.map(r=>`<div style="margin-bottom:14px;font-size:14px">
+      <p style="margin:0"><b>${fmtShort(r.date)}</b> — ${esc(r.diagnosis)}</p>
+      <p style="margin:2px 0 0;color:#5B7185">${esc(r.complaint)}</p>
+      <p style="margin:4px 0 0;white-space:pre-line">${esc(r.rx)}</p></div>`).join(''):'<p style="font-size:14px">لا يوجد</p>'}
+    <p style="font-size:13px;color:#5B7185;margin-top:20px">عدد الملفات والأشعة المرفوعة: ${files.length}</p>
+  </div>`, 'A4');
+}
+
+/* ── شاشة الكشف ── */
+let EXAM_APPT = null, RX = [];
+const nowHM = () => { const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+const activeTodayAppt = pid => DB.appts.find(x=>x.pid===pid && x.date===iso(TODAY) && !['تم الكشف','ملغي'].includes(x.status));
+const waitingQueue = () => todayAppts().filter(a=>a.status==='في الانتظار')
+  .sort((a,b)=>(a.arrived||a.time).localeCompare(b.arrived||b.time));
+
+function recordModal(pid){
+  if (ROLE!=='doctor') return;
+  if (!pid) return patientSearchModal();
+  startExam(pid);
+}
+function startVisit(id){
+  if (ROLE!=='doctor') return;
+  const a = DB.appts.find(x=>x.id===id);
+  if (a) startExam(a.pid, a.id);
+}
+function startExam(pid, apptId){
+  const a = DB.appts.find(x=>x.id===apptId && x.pid===pid) || activeTodayAppt(pid);
+  if (a) { a.status = 'عند الدكتور'; if (!a.arrived) a.arrived = nowHM(); persistData(); }
+  CURRENT_PID = pid; EXAM_APPT = a ? a.id : null; RX = []; pending = [];
+  closeModal(); go('exam');
+}
+function examDirty(){
+  return PAGE==='exam' && !!(($('#exDiag')?.value||'').trim() || ($('#exComplaint')?.value||'').trim() || RX.some(r=>r.drug.trim()));
+}
+function nextPatient(skipConfirm){
+  if (!skipConfirm && examDirty() && !confirm('الكشف الحالي لسه ما اتحفظش. تسيبه وتروح للمريض اللي بعده؟')) return;
+  const n = waitingQueue()[0];
+  if (!n) { toast('مفيش حد في الانتظار دلوقتي','warn'); return go('queue'); }
+  startVisit(n.id);
+}
+function updateNextBtn(){
+  const b = $('#nextBtn'), isDoc = ROLE==='doctor';
+  b.classList.toggle('hidden', !isDoc); b.classList.toggle('flex', isDoc);
+  $('#nextCount').textContent = waitingQueue().length;
+}
+
+/* تحذير الحساسية */
+const ALLERGY_GROUPS = {
+  'بنسلين': ['بنسلين','أموكسيسيلين','أوجمنتين','أمبيسيلين','فلوموكس','هاي بيوتك','ميجاموكس','أموكسيل'],
+  'سلفا':   ['سلفا','سبترين','باكتريم','سلفاسالازين'],
+  'أسبرين': ['أسبرين','ريفو','أسبوسيد','جوسبرين'],
+  'مسكنات': ['ديكلوفيناك','فولتارين','كتافلام','بروفين','ايبوبروفين','بروكسين'],
+};
+function allergyHit(drug, allergy){
+  const d = normalizeSearch(drug);
+  if (!d || !allergy) return '';
+  for (const a of String(allergy).split(/[،,]/).map(x=>x.trim()).filter(Boolean)) {
+    const group = Object.entries(ALLERGY_GROUPS).find(([k])=>normalizeSearch(a).includes(normalizeSearch(k)));
+    if ((group ? group[1] : [a]).some(w=>d.includes(normalizeSearch(w)))) return a;
+  }
+  return '';
+}
+
+/* الروشتة بالأزرار */
+const COMMON_DRUGS = ['أوميبرازول ٢٠مج','إيزوميبرازول ٤٠مج','بانتوبرازول ٤٠مج','دومبيريدون ١٠مج','ميبيفرين ١٣٥مج',
+  'ميترونيدازول ٥٠٠مج','كلاريثروميسين ٥٠٠مج','أموكسيسيلين ١جم','باراسيتامول ٥٠٠مج','سيميثيكون','لاكتيلوز شراب',
+  'ميتفورمين ٥٠٠مج','كونكور ٥مج','فيتامين د ٥٠٠٠٠'];
+const FREQ = ['مرة يومياً','مرتين يومياً','٣ مرات يومياً','عند اللزوم'];
+const WHEN = ['قبل الأكل','بعد الأكل','على الريق','قبل النوم'];
+const DURS = ['٣ أيام','٥ أيام','٧ أيام','١٤ يوم','شهر','مستمر'];
+const rxDose = r => [r.freq, r.when, r.extra].filter(Boolean).join(' — ');
+const rxLine = r => [r.drug.trim(), rxDose(r), r.dur].filter(Boolean).join(' — ');
+
+function drugSuggestions(){
+  const fromRx = DB.records.flatMap(r=>String(r.rx||'').split('\n').map(l=>l.split(' — ')[0].trim()));
+  return [...new Set([...DB.drugs.map(d=>d.name), ...DB.treatments.map(t=>t.drug), ...fromRx, ...COMMON_DRUGS])].filter(x=>x && x!=='—');
+}
+function chip(label, on, action){
+  return `<button type="button" onclick="${action}" class="text-xs px-2.5 py-1 rounded-full border transition ${on
+    ?'bg-primary text-white border-primary':'border-line text-muted hover:border-primary hover:text-primary'}">${label}</button>`;
+}
+function renderRx(){
+  const box = $('#rxRows'); if (!box) return;
+  const allergy = patient(CURRENT_PID).allergy;
+  box.innerHTML = RX.length ? RX.map((r,i)=>{
+    const hit = allergyHit(r.drug, allergy);
+    return `<div class="border ${hit?'border-rose bg-rose/5':'border-line'} rounded-xl2 p-3 space-y-2.5">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-md bg-primary/10 text-primary grid place-items-center text-xs font-semibold num shrink-0">${i+1}</span>
+        <input list="drugList" value="${esc(r.drug)}" oninput="RX[${i}].drug=this.value" onchange="renderRx()"
+               placeholder="اسم الدواء والتركيز" class="field flex-1">
+        ${r.drug.trim() && !drugInList(r.drug) ? `<button type="button" onclick="saveRowToDrugs(${i})" title="احفظه في قايمة أدويتك بالجرعة دي"
+          class="text-xs text-primary border border-primary/30 px-2 py-1 rounded-lg whitespace-nowrap hover:bg-primary/5">+ القايمة</button>` : ''}
+        <button type="button" onclick="RX.splice(${i},1);renderRx()" title="شيل الدواء" class="text-muted hover:text-rose p-1.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      ${hit?`<p class="text-xs text-rose font-semibold">⚠ المريض عنده حساسية من ${esc(hit)} — راجع الدواء ده قبل ما تكتبه</p>`:''}
+      <div class="flex flex-wrap gap-1.5">${FREQ.map((f,j)=>chip(f, r.freq===f, `rxPick(${i},'freq',${j})`)).join('')}</div>
+      <div class="flex flex-wrap gap-1.5">${WHEN.map((w,j)=>chip(w, r.when===w, `rxPick(${i},'when',${j})`)).join('')}</div>
+      <div class="flex flex-wrap gap-1.5 items-center"><span class="text-xs text-muted ml-1">المدة:</span>
+        ${DURS.map((d,j)=>chip(d, r.dur===d, `rxPick(${i},'dur',${j})`)).join('')}
+        ${r.dur && !DURS.includes(r.dur) ? chip(esc(r.dur), true, `RX[${i}].dur='';renderRx()`) : ''}</div>
+      <input value="${esc(r.extra)}" oninput="RX[${i}].extra=this.value" placeholder="تعليمات إضافية (اختياري)" class="field text-sm">
+    </div>`;}).join('')
+  : `<button type="button" onclick="rxAdd()" class="w-full text-sm text-muted py-6 border-2 border-dashed border-line rounded-xl2 hover:border-primary hover:text-primary transition">
+       لسه مفيش أدوية — اختار من قايمتك فوق أو اضغط هنا واكتب دواء</button>`;
+  renderDrugPicker();
+}
+/* ── قايمة أدوية الدكتور ── */
+const drugKey = name => normalizeSearch(name);
+const drugInList = name => DB.drugs.some(d=>drugKey(d.name)===drugKey(name));
+/** عدد مرات كتابة كل دواء في الكشوفات، عشان الأكثر استخداماً يطلع الأول. */
+function drugUsage(){
+  const use = new Map();
+  DB.records.forEach(r=>rxItems(r.rx).forEach(m=>use.set(drugKey(m.drug), (use.get(drugKey(m.drug))||0) + 1)));
+  return use;
+}
+function sortedDrugs(){
+  const use = drugUsage();
+  return [...DB.drugs].sort((a,b)=>(use.get(drugKey(b.name))||0)-(use.get(drugKey(a.name))||0) || a.name.localeCompare(b.name,'ar'));
+}
+const drugDose = d => [d.freq, d.when, d.dur, d.extra].filter(Boolean).join(' · ');
+function drugMatches(){
+  const q = drugKey(($('#drugSearch')||{}).value || '');
+  const list = sortedDrugs().filter(d=>!q || drugKey(d.name).includes(q));
+  return q ? list.slice(0, 30) : list.slice(0, 16);
+}
+function renderDrugPicker(){
+  const box = $('#drugChips'); if (!box) return;
+  const inRx = new Set(RX.map(r=>drugKey(r.drug))), allergy = patient(CURRENT_PID).allergy;
+  const list = drugMatches();
+  box.innerHTML = list.length ? list.map(d=>{
+    const added = inRx.has(drugKey(d.name)), risky = allergyHit(d.name, allergy);
+    return `<button type="button" onclick="pickDrug(${d.id})" ${added?'disabled':''} title="${esc(drugDose(d))}"
+      class="text-right text-xs px-2.5 py-1.5 rounded-lg border transition ${added?'bg-primary/10 border-primary/30 text-primary cursor-default'
+        : risky?'border-rose/40 text-rose hover:bg-rose/5':'bg-white border-line hover:border-primary hover:text-primary'}">
+      <span class="font-semibold">${added?'✓ ':''}${esc(d.name)}</span>${d.freq||d.dur?`<span class="text-muted font-normal"> · ${esc([d.freq,d.dur].filter(Boolean).join(' · '))}</span>`:''}
+    </button>`;}).join('')
+    : '<p class="text-xs text-muted">مفيش دواء بالاسم ده في قايمتك — اكتبه في سطر جديد تحت واحفظه بزرار "+ القايمة".</p>';
+}
+function pickDrug(id){
+  const d = DB.drugs.find(x=>x.id===id); if (!d) return;
+  if (RX.some(r=>drugKey(r.drug)===drugKey(d.name))) return;
+  RX = RX.filter(r=>r.drug.trim());
+  RX.push({ drug:d.name, freq:d.freq||'', when:d.when||'', dur:d.dur||'', extra:d.extra||'' });
+  const s = $('#drugSearch'); if (s) s.value = '';
+  renderRx();
+}
+function pickFirstDrug(){ const d = drugMatches().find(x=>!RX.some(r=>drugKey(r.drug)===drugKey(x.name))); if (d) pickDrug(d.id); }
+function saveRowToDrugs(i){
+  const r = RX[i];
+  DB.drugs.push({ id:Sync.newId(), name:r.drug.trim(), freq:r.freq||'', when:r.when||'', dur:r.dur||'', extra:r.extra||'' });
+  persistData(); renderRx();
+  toast(r.drug.trim() + ' اتحفظ في قايمة أدويتك');
+}
+
+function rxPick(i, key, j){
+  const v = {freq:FREQ, when:WHEN, dur:DURS}[key][j];
+  RX[i][key] = RX[i][key]===v ? '' : v;
+  renderRx();
+}
+function rxAdd(){
+  RX.push({drug:'', freq:'', when:'', dur:'', extra:''});
+  renderRx();
+  const ins = $('#rxRows').querySelectorAll('input[list]');
+  ins[ins.length-1]?.focus();
+}
+function rxRepeat(){
+  let rows = DB.treatments.filter(t=>t.pid===CURRENT_PID && t.active)
+    .map(t=>({drug:t.drug, freq:'', when:'', dur:t.duration||'', extra:t.dose||''}));
+  if (!rows.length) {
+    const last = DB.records.filter(r=>r.pid===CURRENT_PID).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    if (last && last.rx && last.rx!=='—') rows = last.rx.split('\n').filter(l=>l.trim()).map(l=>{
+      const [drug, ...rest] = l.split(' — ');
+      return {drug:drug.trim(), freq:'', when:'', dur:'', extra:rest.join(' — ').trim()};
+    });
+  }
+  if (!rows.length) return toast('مفيش روشتة سابقة للمريض ده','warn');
+  const have = new Set(RX.map(r=>normalizeSearch(r.drug)));
+  RX = RX.filter(r=>r.drug.trim()).concat(rows.filter(r=>!have.has(normalizeSearch(r.drug))));
+  renderRx();
+}
+const setField = (sel, v) => { $(sel).value = v.trim(); };
+/* ── قايمة التحاليل والأشعة (الدكتور) ── */
+const LAB_KINDS = ['تحليل','أشعة','إجراء'];
+const DEFAULT_LAB_CHIPS = ['صورة دم CBC','وظائف كبد','وظائف كلى','سكر تراكمي','H. Pylori','سونار بطن'];
+const labKey = name => normalizeSearch(name);
+const splitTests = v => String(v||'').split(/[،,]/).map(x=>x.trim()).filter(Boolean);
+function labUsage(){
+  const use = new Map();
+  DB.records.forEach(r=>splitTests(r.tests).forEach(t=>use.set(labKey(t), (use.get(labKey(t))||0) + 1)));
+  return use;
+}
+function sortedLabs(){
+  const use = labUsage();
+  return [...DB.labs].sort((a,b)=>(use.get(labKey(b.name))||0)-(use.get(labKey(a.name))||0) || a.name.localeCompare(b.name,'ar'));
+}
+function renderLabChips(){
+  const box = $('#labChips'); if (!box) return;
+  const chosen = new Set(splitTests($('#exTests').value).map(labKey));
+  const q = labKey(($('#labSearch')||{}).value || '');
+  const names = DB.labs.length
+    ? sortedLabs().filter(l=>!q || labKey(l.name).includes(q)).slice(0, q ? 30 : 14).map(l=>l.name)
+    : DEFAULT_LAB_CHIPS;
+  box.innerHTML = names.map(n=>{
+    const on = chosen.has(labKey(n)), kind = (DB.labs.find(l=>labKey(l.name)===labKey(n))||{}).kind;
+    return `<button type="button" onclick="toggleTest(this.dataset.name)" data-name="${esc(n)}"
+      class="text-xs px-2.5 py-1 rounded-full border transition ${on?'bg-primary text-white border-primary':'border-line text-muted hover:border-primary hover:text-primary'}">${on?'✓ ':''}${esc(n)}${kind && kind!=='تحليل' ? `<span class="opacity-60"> · ${kind}</span>` : ''}</button>`;
+  }).join('') || '<span class="text-xs text-muted">مفيش في القايمة بالاسم ده</span>';
+}
+function toggleTest(name){
+  const el = $('#exTests'), parts = splitTests(el.value), k = labKey(name);
+  el.value = (parts.some(p=>labKey(p)===k) ? parts.filter(p=>labKey(p)!==k) : [...parts, name]).join('، ');
+  renderLabChips();
+}
+
+function appendField(sel, v){
+  const el = $(sel), parts = el.value.split('،').map(x=>x.trim()).filter(Boolean);
+  if (!parts.includes(v.trim())) parts.push(v.trim());
+  el.value = parts.join('، ');
+}
+function vitalTone(kind, v){
+  if (!v) return '';
+  if (kind==='bp') { const [s,d] = String(v).split('/').map(Number);
+    if (s>=140 || d>=90 || s<90) return 'text-rose'; if (s>=130 || d>=85) return 'text-amber'; }
+  if (kind==='sugar') { const n = parseFloat(v);
+    if (n>=200 || n<70) return 'text-rose'; if (n>=140) return 'text-amber'; }
+  return '';
+}
+
+function examPage(){
+  const pid = CURRENT_PID, p = patient(pid);
+  const last = DB.records.filter(r=>r.pid===pid).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const meds = DB.treatments.filter(t=>t.pid===pid && t.active);
+  const files = DB.files.filter(f=>f.pid===pid).sort((a,b)=>b.id-a.id);
+  const appt = DB.appts.find(a=>a.id===EXAM_APPT);
+  const waitingN = waitingQueue().length;
+  const count = {};
+  DB.records.forEach(r=>{ if (r.diagnosis && r.diagnosis!=='—') count[r.diagnosis]=(count[r.diagnosis]||0)+1; });
+  const topDx = Object.keys(count).sort((a,b)=>count[b]-count[a]).slice(0,6);
+  const vitalsToday = p.vitalsDate===iso(TODAY);
+  const qchip = (label, action) => `<button type="button" onclick="${action}" class="text-xs px-2.5 py-1 rounded-full border border-line text-muted hover:border-primary hover:text-primary transition">${label}</button>`;
+  const card = (title, body) => `<section class="bg-white border border-line rounded-xl2 shadow-card p-4">
+      <h3 class="text-xs text-muted mb-2">${title}</h3>${body}</section>`;
+
+  return `
+  <div class="space-y-4">
+    ${p.allergy ? `<div class="bg-rose text-white rounded-xl2 px-4 py-3 flex items-center gap-3 shadow-card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 shrink-0"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <p class="text-sm"><b>حساسية:</b> ${esc(p.allergy)}</p></div>` : ''}
+
+    <div class="grid xl:grid-cols-[340px_1fr] gap-5 items-start">
+      <!-- ملخص المريض -->
+      <aside class="space-y-4 xl:sticky xl:top-20">
+        <section class="bg-deep text-white rounded-xl2 p-5">
+          <div class="flex items-center gap-3">
+            <span class="w-12 h-12 rounded-xl2 bg-white/10 grid place-items-center font-bold shrink-0">${esc(initials(p.name))}</span>
+            <div class="min-w-0"><p class="font-semibold truncate">${esc(p.name)}</p>
+              <p class="text-white/60 text-xs num mt-0.5">${p.age} سنة · ${esc(p.gender)} · ${esc(p.blood||'—')} · ملف ${fileNo(p)}</p></div>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span class="text-xs bg-white/10 px-2.5 py-1 rounded-full">${esc(p.chronic||'لا يوجد')}</span>
+            ${appt ? `<span class="text-xs bg-white/10 px-2.5 py-1 rounded-full num">${esc(appt.type)} · ${fmtTime(appt.time)}</span>` : ''}
+          </div>
+          <button onclick="openFile(${pid})" class="mt-4 w-full text-sm border border-white/25 py-2 rounded-xl2 hover:bg-white/10">الملف الكامل</button>
+        </section>
+
+        ${card(`القياسات ${vitalsToday?'<span class="text-mint">· اتقاست النهارده</span>':p.vitalsDate?'· '+fmtShort(p.vitalsDate):'· لم تسجّل'}`,
+          `<div class="grid grid-cols-4 gap-2 text-center">
+            <div><p class="text-[.7rem] text-muted">الضغط</p><p class="font-semibold num text-sm ${vitalTone('bp',p.bp)}">${esc(p.bp||'—')}</p></div>
+            <div><p class="text-[.7rem] text-muted">السكر</p><p class="font-semibold num text-sm ${vitalTone('sugar',p.sugar)}">${esc(String(p.sugar||'—').replace(' mg/dl',''))}</p></div>
+            <div><p class="text-[.7rem] text-muted">الوزن</p><p class="font-semibold num text-sm">${esc(p.weight||'—')}</p></div>
+            <div><p class="text-[.7rem] text-muted">الطول</p><p class="font-semibold num text-sm">${esc(p.height||'—')}</p></div>
+          </div>`)}
+
+        ${p.note ? card('ملاحظات التمريض', `<p class="text-sm leading-relaxed whitespace-pre-line">${esc(p.note)}</p>`) : ''}
+
+        ${card(`الأدوية الحالية (${meds.length})`, meds.length
+          ? `<ul class="space-y-1.5 text-sm">${meds.map(m=>`<li><span class="font-medium">${esc(m.drug)}</span> <span class="text-muted text-xs">— ${esc(m.dose)}</span></li>`).join('')}</ul>`
+          : '<p class="text-sm text-muted">مفيش أدوية شغالة.</p>')}
+
+        ${card('آخر كشف', last
+          ? `<p class="text-xs text-muted num">${fmtShort(last.date)}</p>
+             <p class="font-medium text-sm mt-1">${esc(last.diagnosis)}</p>
+             <p class="text-xs text-muted mt-2 whitespace-pre-line leading-relaxed border-r-2 border-primary/30 pr-2">${esc(last.rx)}</p>
+             ${last.tests?`<p class="text-xs mt-2"><span class="text-muted">مطلوب:</span> ${esc(last.tests)}</p>`:''}`
+          : '<p class="text-sm text-muted">أول زيارة للمريض.</p>')}
+
+        ${files.length ? card(`الملفات (${files.length})`, `<div class="flex flex-wrap gap-2">${files.slice(0,6).map(fileChip).join('')}</div>`) : ''}
+      </aside>
+
+      <!-- فورم الكشف -->
+      <section class="bg-white border border-line rounded-xl2 shadow-card">
+        <div class="p-5 border-b border-line flex items-center justify-between gap-3 flex-wrap">
+          <div><h2 class="font-semibold">كشف النهارده</h2>
+            <p class="text-xs text-muted mt-0.5">${fmtDate(iso(TODAY))}</p></div>
+          <span class="text-xs num bg-amber/10 text-amber px-2.5 py-1 rounded-full">${waitingN} في الانتظار</span>
+        </div>
+
+        <div class="p-5 space-y-6">
+          <div><label class="lbl" for="exComplaint">الشكوى</label>
+            <textarea id="exComplaint" rows="2" class="field" placeholder="المريض بيشتكي من إيه؟"></textarea></div>
+
+          <div><label class="lbl" for="exDiag">التشخيص</label>
+            <input id="exDiag" class="field" placeholder="التشخيص">
+            ${topDx.length?`<div class="flex flex-wrap gap-1.5 mt-2">${topDx.map(d=>qchip(esc(d), "setField('#exDiag',this.textContent)")).join('')}</div>`:''}</div>
+
+          <div>
+            <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+              <label class="lbl !mb-0">الروشتة</label>
+              <div class="flex gap-2">
+                <button type="button" onclick="rxRepeat()" class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary">كرر الروشتة السابقة</button>
+                <button type="button" onclick="rxAdd()" class="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-lg hover:bg-primary/15 font-medium">+ إضافة دواء</button>
+              </div>
+            </div>
+            ${DB.drugs.length ? `<div class="border border-line rounded-xl2 p-3 bg-canvas/40 mb-3">
+              <div class="flex items-center gap-2 mb-2.5 flex-wrap">
+                <span class="text-xs font-semibold">قايمة أدويتك</span>
+                <span class="text-[.7rem] text-muted">— اضغط على الدواء يتضاف بجرعته</span>
+                <input id="drugSearch" oninput="renderDrugPicker()" onkeydown="if(event.key==='Enter'){event.preventDefault();pickFirstDrug();}"
+                       placeholder="دوّر في القايمة" autocomplete="off" class="field !py-1.5 text-sm !w-48 mr-auto">
+              </div>
+              <div id="drugChips" class="flex flex-wrap gap-1.5"></div>
+            </div>` : `<p class="text-xs text-muted mb-3">جهّز <a href="#/settings/drugs" onclick="event.preventDefault();if(!examDirty()||confirm('تسيب الكشف من غير حفظ؟'))setSettingsTab('drugs')" class="text-primary hover:underline">قايمة أدويتك</a> مرة واحدة، وبعدها تختار الدواء بجرعته بضغطة.</p>`}
+            <div id="rxRows" class="space-y-3"></div>
+            <datalist id="drugList">${drugSuggestions().map(d=>`<option value="${esc(d)}">`).join('')}</datalist>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-5">
+            <div><label class="lbl" for="exTests">تحاليل أو أشعة</label>
+              <input id="exTests" class="field" placeholder="لو مطلوب" oninput="renderLabChips()">
+              ${DB.labs.length ? `<input id="labSearch" oninput="renderLabChips()" placeholder="دوّر في قايمة التحاليل" autocomplete="off" class="field !py-1.5 text-sm mt-2">` : ''}
+              <div id="labChips" class="flex flex-wrap gap-1.5 mt-2"></div>
+              ${DB.labs.length ? '' : `<p class="text-[.7rem] text-muted mt-1.5">ضيف تحاليلك وأشعتك من <a href="#/settings/labs" onclick="event.preventDefault();if(!examDirty()||confirm('تسيب الكشف من غير حفظ؟'))setSettingsTab('labs')" class="text-primary hover:underline">الإعدادات</a> عشان تظهر هنا.</p>`}</div>
+            <div><label class="lbl" for="exNext">موعد المتابعة</label>
+              <input id="exNext" class="field" placeholder="مثال: بعد أسبوعين">
+              <div class="flex flex-wrap gap-1.5 mt-2">${['بعد أسبوع','بعد أسبوعين','بعد شهر','حسب الحاجة']
+                .map(x=>qchip(x, "setField('#exNext',this.textContent)")).join('')}</div></div>
+          </div>
+
+          <div><label class="lbl">مرفقات الكشف</label>
+            <div onclick="pickPending()" ondragover="event.preventDefault();this.classList.add('border-primary')"
+                 ondragleave="this.classList.remove('border-primary')"
+                 ondrop="event.preventDefault();this.classList.remove('border-primary');stagePending(event.dataTransfer.files)"
+                 class="border-2 border-dashed border-line rounded-xl2 p-4 text-center cursor-pointer hover:border-primary transition text-sm text-muted">
+              اسحب صور الأشعة أو التحاليل هنا أو اضغط للاختيار</div>
+            <div id="pendingFiles" class="flex flex-wrap gap-2 mt-3"></div></div>
+        </div>
+
+        <div class="sticky bottom-0 bg-white/95 backdrop-blur border-t border-line rounded-b-xl2 p-4 flex flex-wrap gap-2 justify-end">
+          <button onclick="if(!examDirty()||confirm('تسيب الكشف من غير حفظ؟'))go('queue')" class="text-sm text-muted px-4 py-2.5 hover:text-ink">رجوع</button>
+          <button onclick="saveExam('save')" class="border border-line text-sm px-4 py-2.5 rounded-xl2 hover:border-primary hover:text-primary">حفظ فقط</button>
+          <button onclick="saveExam('print')" class="border border-primary text-primary text-sm font-medium px-4 py-2.5 rounded-xl2 hover:bg-primary/5">حفظ وطباعة</button>
+          <button onclick="saveExam('next')" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd flex items-center gap-2">
+            حفظ وطباعة والتالي <span class="num text-xs bg-white/20 rounded-full px-1.5">${waitingN}</span></button>
+        </div>
+      </section>
+    </div>
+  </div>`;
+}
+
+function saveExam(mode){
+  if (ROLE!=='doctor') return;
+  const pid = CURRENT_PID;
+  const diagnosis = $('#exDiag').value.trim();
+  if (!diagnosis) { $('#exDiag').focus(); return toast('اكتب التشخيص قبل الحفظ','err'); }
+  const rows = RX.filter(r=>r.drug.trim());
+  const rec = { id:Sync.newId(), pid, date:iso(TODAY), complaint:$('#exComplaint').value.trim()||'—', diagnosis,
+    rx: rows.map(rxLine).join('\n') || '—', tests:$('#exTests').value.trim(), next:$('#exNext').value.trim() };
+  DB.records.push(rec);
+  pending.forEach(f => DB.files.push({ id:Sync.newId(), pid, rid:rec.id, name:f.name, mime:f.mime,
+    size:f.size, data:f.data, kind:f.kind, note:'', date:iso(TODAY) }));
+
+  // الأدوية الجديدة بتتضاف لخطة العلاج، والموجودة بتتحدّث جرعتها
+  rows.forEach(r=>{
+    const drug = r.drug.trim(), dose = rxDose(r) || 'حسب التعليمات';
+    const ex = DB.treatments.find(t=>t.pid===pid && t.active && normalizeSearch(t.drug)===normalizeSearch(drug));
+    if (ex) { ex.dose = dose; ex.duration = r.dur || ex.duration; }
+    else DB.treatments.push({ id:Sync.newId(), pid, drug, dose, duration:r.dur, start:iso(TODAY), note:'', active:true });
+  });
+
+  // كشف من غير موعد بيتسجل كزيارة عشان يظهر في التحصيل
+  const a = DB.appts.find(x=>x.id===EXAM_APPT && x.pid===pid) || activeTodayAppt(pid);
+  if (a) a.status = 'تم الكشف';
+  else DB.appts.push({ id:Sync.newId(), pid, date:iso(TODAY), time:nowHM(), arrived:nowHM(), type:'كشف', status:'تم الكشف',
+    fee:patient(pid).visitFee ?? DB.fees['كشف'], paid:false, method:'' });
+
+  RX = []; pending = []; EXAM_APPT = null;
+  persistData();
+  toast('الكشف اتسجّل في ملف المريض');
+  if (mode!=='save') printRx(rec.id);
+  if (mode==='next') return nextPatient(true);
+  openFile(pid, 'records');
+}
+
+/* ── لوحة الانتظار ── */
+const QUEUE_COLS = [
+  ['محجوز',       'محجوز — لسه موصلش', 'primary'],
+  ['في الانتظار', 'وصل — في الانتظار', 'amber'],
+  ['عند الدكتور', 'عند الدكتور',        'deep'],
+  ['تم الكشف',    'خلص',                'mint'],
+];
+/* ── تسجيل كشف النهارده: مريض موجود أو جديد في خطوة واحدة ── */
+let TV = { pid:null, isNew:false };
+function todayVisitModal(){
+  TV = { pid:null, isNew:false };
+  openModal(`${modalHead('تسجيل كشف النهارده','المريض هيظهر في لوحة الانتظار عند الدكتور على طول')}
+    <div class="p-5 space-y-4">
+      <div><label class="lbl" for="tvSearch">المريض</label>
+        <input id="tvSearch" class="field" placeholder="ابحث بالاسم أو التليفون أو رقم الملف" oninput="renderTodayVisitResults()" autocomplete="off"></div>
+      <div id="tvResults" class="space-y-2 max-h-56 overflow-y-auto"></div>
+      <div id="tvNew" class="hidden grid grid-cols-2 gap-3 border border-dashed border-primary/40 rounded-xl2 p-4 bg-primary/5">
+        <p class="col-span-2 text-sm font-semibold">مريض جديد</p>
+        <div class="col-span-2"><label class="lbl" for="tvName">الاسم بالكامل</label><input id="tvName" class="field"></div>
+        <div><label class="lbl" for="tvPhone">التليفون</label><input id="tvPhone" class="field num" dir="ltr"></div>
+        <div><label class="lbl" for="tvAge">السن</label><input id="tvAge" type="number" min="0" class="field num"></div>
+        <div class="col-span-2"><label class="lbl" for="tvGender">النوع</label>
+          <select id="tvGender" class="field"><option>ذكر</option><option>أنثى</option></select></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="lbl" for="tvType">نوع الزيارة</label>
+          <select id="tvType" class="field" onchange="$('#tvFee').value=DB.fees[this.value]??$('#tvFee').value">
+            ${Object.keys(DB.fees).map(t=>`<option>${esc(t)}</option>`).join('')}</select></div>
+        <div><label class="lbl" for="tvFee">الرسوم (جنيه)</label>
+          <input id="tvFee" type="number" min="0" step="0.01" class="field num" value="${esc(Object.values(DB.fees)[0] ?? 0)}"></div>
+      </div>
+      <div>
+        <p class="lbl">الحالة</p>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="border border-line rounded-xl2 p-3 text-center text-sm cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+            <input type="radio" name="tvWhen" value="now" checked class="sr-only" onchange="$('#tvTimeBox').classList.add('hidden')">وصل دلوقتي — في الانتظار</label>
+          <label class="border border-line rounded-xl2 p-3 text-center text-sm cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+            <input type="radio" name="tvWhen" value="later" class="sr-only" onchange="$('#tvTimeBox').classList.remove('hidden')">جاي بعدين — حجز ساعة</label>
+        </div>
+        <div id="tvTimeBox" class="hidden mt-3"><label class="lbl" for="tvTime">الساعة</label>
+          <input id="tvTime" type="time" class="field num" value="${nowHM()}"></div>
+      </div>
+    </div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>
+      <button onclick="saveTodayVisit()" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">تسجيل الكشف</button>
+    </div>`);
+  renderTodayVisitResults();
+  $('#tvSearch').focus();
+}
+function renderTodayVisitResults(){
+  const q = $('#tvSearch').value.trim();
+  const list = findPatients(q).slice(0, 6);
+  $('#tvResults').innerHTML = (q ? list.map(p=>{
+    const busy = activeTodayAppt(p.id);
+    return `<button type="button" onclick="pickTodayPatient(${p.id})"
+      class="w-full text-right border rounded-xl2 p-3 flex items-center gap-3 transition ${TV.pid===p.id?'border-primary bg-primary/5':'border-line hover:border-primary'}">
+      ${avatar(p.name,'w-8 h-8')}
+      <span class="min-w-0 flex-1"><span class="block text-sm font-medium truncate">${esc(p.name)}</span>
+        <span class="block text-xs text-muted num">${esc(p.phone)} · ملف ${fileNo(p)}${p.allergy?' · <span class="text-rose">حساسية</span>':''}</span></span>
+      ${busy?`<span class="text-[.7rem] text-amber bg-amber/10 px-2 py-0.5 rounded-full shrink-0">${esc(busy.status)} النهارده</span>`:''}
+    </button>`;}).join('') : '')
+    + `<button type="button" onclick="pickTodayPatient(null)" class="w-full text-sm border border-dashed rounded-xl2 p-3 transition ${TV.isNew?'border-primary text-primary bg-primary/5':'border-line text-primary hover:border-primary'}">
+        ${q && !list.length ? 'مش لاقيينه — ' : ''}+ مريض جديد</button>`;
+}
+function pickTodayPatient(pid){
+  TV = { pid, isNew: pid===null };
+  $('#tvNew').classList.toggle('hidden', !TV.isNew);
+  if (TV.isNew) {
+    const q = $('#tvSearch').value.trim();
+    if (/^[\d\s٠-٩+-]+$/.test(q)) $('#tvPhone').value ||= q; else $('#tvName').value ||= q;
+    $('#tvName').focus();
+  } else {
+    const a = activeTodayAppt(pid);
+    if (a) { $('#tvType').value = a.type; $('#tvFee').value = a.fee; }
+    else { $('#tvFee').value = patient(pid).visitFee ?? DB.fees[$('#tvType').value] ?? $('#tvFee').value; }
+  }
+  renderTodayVisitResults();
+}
+function saveTodayVisit(){
+  const fee = readVisitFee('#tvFee');
+  if (fee===null) return;
+  const now = document.querySelector('input[name="tvWhen"]:checked').value==='now';
+  const time = now ? nowHM() : $('#tvTime').value;
+  if (!time) return toast('اختار ساعة الحجز','err');
+  const type = $('#tvType').value;
+  let pid = TV.pid;
+
+  if (TV.isNew) {
+    const name = $('#tvName').value.trim(), phone = $('#tvPhone').value.trim();
+    if (!name) return toast('اكتب اسم المريض','err');
+    if (!phone) return toast('رقم التليفون مطلوب للتواصل','err');
+    const dup = DB.patients.find(p=>normalizeSearch(p.name)===normalizeSearch(name) && normalizeSearch(p.phone)===normalizeSearch(phone));
+    if (dup) { pickTodayPatient(dup.id); return toast('المريض ده مسجّل قبل كده — اخترناه من السجل','warn'); }
+    const p = { id:Sync.newId(), name, phone, age:Number($('#tvAge').value)||'', gender:$('#tvGender').value,
+      blood:'غير معروفة', chronic:'لا يوجد', visitFee:fee, created:iso(TODAY) };
+    DB.patients.push(p);
+    pid = p.id;
+  }
+  if (!pid) return toast('اختار المريض أو سجّله جديد','err');
+
+  const existing = activeTodayAppt(pid);
+  if (existing) {
+    if (existing.paid && existing.fee!==fee) return toast('مينفعش تغيّر رسوم كشف اتحصّل','err');
+    existing.type = type; existing.fee = fee;
+    if (now && existing.status==='محجوز') { existing.status = 'في الانتظار'; existing.arrived = nowHM(); }
+  } else {
+    if (!now) {
+      const clash = DB.appts.find(a=>a.date===iso(TODAY) && a.time===time && a.status!=='ملغي');
+      if (clash) return toast('الساعة دي محجوزة لـ ' + patient(clash.pid).name,'warn');
+    }
+    DB.appts.push({ id:Sync.newId(), pid, date:iso(TODAY), time, type, status: now ? 'في الانتظار' : 'محجوز',
+      fee, paid:false, method:'', arrived: now ? nowHM() : null });
+  }
+  closeModal();
+  toast(`${patient(pid).name} ${now ? 'في الانتظار عند الدكتور' : 'اتحجزله الساعة ' + fmtTime(time)}`);
+  go(PAGE);
+}
+
+/** يعرّف الدكتور لما مريض يوصل الانتظار من جهاز تاني. */
+let KNOWN_WAITING = null;
+function notifyArrivals(){
+  const ids = waitingQueue().map(a=>a.id);
+  if (KNOWN_WAITING && ROLE==='doctor') {
+    ids.filter(id=>!KNOWN_WAITING.has(id)).forEach(id=>toast('وصل للانتظار: ' + patient(DB.appts.find(a=>a.id===id).pid).name, 'warn'));
+  }
+  KNOWN_WAITING = new Set(ids);
+}
+
+function queuePage(){
+  const t = todayAppts();
+  return `
+  <div class="space-y-4">
+    <div class="flex flex-wrap items-center gap-3 justify-between">
+      <p class="text-sm text-muted">سجّل كشف النهارده وهيظهر عند الدكتور على طول. اسحب الكارت من عمود للتاني أو استخدم الأسهم.</p>
+      <div class="flex gap-2">
+        ${ROLE==='nurse' ? '' : `<button onclick="patientSearchModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2 hover:border-primary hover:text-primary">حجز موعد</button>`}
+        <button onclick="todayVisitModal()" class="bg-primary text-white text-sm font-medium px-4 py-2.5 rounded-xl2 hover:bg-primaryd flex items-center gap-2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="M12 5v14M5 12h14"/></svg>
+          تسجيل كشف النهارده</button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+      ${QUEUE_COLS.map(([st,label,tone],ci)=>{
+        const list = t.filter(a=>a.status===st);
+        if (st==='في الانتظار') list.sort((a,b)=>(a.arrived||a.time).localeCompare(b.arrived||b.time));
+        return `<section class="bg-white/60 border border-line rounded-xl2 flex flex-col min-h-[340px] transition"
+            ondragover="event.preventDefault();this.classList.add('ring-2','ring-primary/40','bg-primary/5')"
+            ondragleave="if(!this.contains(event.relatedTarget))this.classList.remove('ring-2','ring-primary/40','bg-primary/5')"
+            ondrop="this.classList.remove('ring-2','ring-primary/40','bg-primary/5');dropAppt(event,'${st}')">
+          <header class="px-4 py-3 flex items-center gap-2 border-b border-line">
+            <span class="w-2.5 h-2.5 rounded-full bg-${tone}"></span>
+            <h2 class="font-semibold text-sm">${label}</h2>
+            <span class="mr-auto text-xs num bg-${tone}/10 text-${tone} px-2 py-0.5 rounded-full">${list.length}</span>
+          </header>
+          <div class="p-3 space-y-2.5 flex-1">
+            ${list.map(a=>queueCard(a,ci)).join('') || '<p class="text-xs text-muted text-center py-8">مفيش حد هنا</p>'}
+          </div>
+        </section>`;}).join('')}
+    </div>
+  </div>`;
+}
+function queueCard(a, ci){
+  const p = patient(a.pid), st = a.status;
+  const prev = QUEUE_COLS[ci-1], next = QUEUE_COLS[ci+1];
+  const arrow = (col, d, title) => `<button onclick="moveAppt(${a.id},'${col[0]}')" title="${title} ${col[1]}"
+      class="w-7 h-7 grid place-items-center rounded-lg border border-line text-muted hover:border-primary hover:text-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="${d}"/></svg></button>`;
+  return `<article draggable="true"
+      ondragstart="event.dataTransfer.setData('text/plain','${a.id}');this.classList.add('opacity-50')"
+      ondragend="this.classList.remove('opacity-50')"
+      class="bg-white border ${st==='عند الدكتور'?'border-deep/40':'border-line'} rounded-xl2 p-3 shadow-card cursor-grab active:cursor-grabbing">
+    <div class="flex items-start gap-2.5">
+      ${avatar(p.name,'w-8 h-8')}
+      <button onclick="openFile(${p.id})" class="min-w-0 flex-1 text-right">
+        <p class="text-sm font-medium truncate hover:text-primary">${esc(p.name)}</p>
+        <p class="text-xs text-muted num mt-0.5">${fmtTime(a.time)} · ${esc(a.type)}${a.arrived && st!=='محجوز' ? ' · وصل '+fmtTime(a.arrived) : ''}</p>
+      </button>
+      ${p.allergy ? `<span title="حساسية: ${esc(p.allergy)}" class="text-[.65rem] bg-rose/10 text-rose px-1.5 py-0.5 rounded-full shrink-0">حساسية</span>` : ''}
+    </div>
+    <div class="flex items-center gap-1.5 mt-3">
+      ${a.paid ? '<span class="text-[.7rem] text-mint bg-mint/10 px-2 py-0.5 rounded-full">مدفوع</span>'
+        : `<button onclick="payModal(${a.id})" class="text-[.7rem] text-amber border border-amber/40 px-2 py-0.5 rounded-full hover:bg-amber/5 num whitespace-nowrap">تحصيل ${money(a.fee)}</button>`}
+      <div class="mr-auto flex gap-1">
+        ${ROLE==='doctor' && ['في الانتظار','عند الدكتور'].includes(st) ? `<button onclick="startVisit(${a.id})"
+          class="text-xs bg-primary text-white px-2.5 py-1 rounded-lg hover:bg-primaryd whitespace-nowrap">${st==='عند الدكتور'?'كمّل الكشف':'ابدأ الكشف'}</button>` : ''}
+        ${prev ? arrow(prev, 'm9 6 6 6-6 6', 'رجوع لـ') : ''}
+        ${next ? arrow(next, 'm15 6-6 6 6 6', 'نقل لـ') : ''}
+      </div>
+    </div>
+  </article>`;
+}
+function dropAppt(e, st){
+  e.preventDefault();
+  const id = Number(e.dataTransfer.getData('text/plain'));
+  if (id) moveAppt(id, st);
+}
+function moveAppt(id, st){
+  const a = DB.appts.find(x=>x.id===id);
+  if (!a || a.status===st) return;
+  if (st==='محجوز') delete a.arrived;
+  else if (!a.arrived) a.arrived = nowHM();
+  a.status = st;
+  toast(`${patient(a.pid).name}: ${QUEUE_COLS.find(c=>c[0]===st)[1]}`);
+  go(PAGE);
+}
+
+/* مرفقات مؤقتة أثناء كتابة الكشف */
+let pending = [];
+function pickPending(){
+  const i = document.createElement('input');
+  i.type='file'; i.multiple=true; i.accept='image/*,.pdf';
+  i.onchange = () => stagePending(i.files);
+  i.click();
+}
+function stagePending(fileList){
+  withinUploadLimit(fileList).forEach(file => {
+    const r = new FileReader();
+    r.onload = e => {
+      pending.push({ name:file.name, mime:file.type||'application/pdf', size:file.size,
+                     data:e.target.result, kind:guessKind(file.name) });
+      renderPending();
+    };
+    r.readAsDataURL(file);
+  });
+}
+function renderPending(){
+  const box = $('#pendingFiles'); if (!box) return;
+  box.innerHTML = pending.map((f,i)=>`
+    <span class="inline-flex items-center gap-2 bg-canvas border border-line rounded-lg px-2.5 py-1.5 text-xs">
+      ${f.mime.startsWith('image/')?`<img src="${f.data}" class="w-6 h-6 rounded object-cover">`:'<span class="text-rose">PDF</span>'}
+      <span class="max-w-[120px] truncate">${esc(f.name)}</span>
+      <button onclick="pending.splice(${i},1);renderPending()" class="text-muted hover:text-rose">×</button>
+    </span>`).join('');
+}
+
+/* تحصيل */
+function payModal(id){
+  const a = DB.appts.find(x=>x.id===id), p = patient(a.pid);
+  openModal(`${modalHead('تحصيل رسوم الكشف', esc(p.name)+' · '+fmtTime(a.time))}
+    <div class="p-5 space-y-4">
+      <div class="bg-canvas rounded-xl2 p-5 text-center">
+        <p class="text-muted text-xs">المبلغ المطلوب</p>
+        <p class="text-4xl font-bold num mt-1">${money(a.fee)} <span class="text-lg text-muted">ج</span></p>
+        <p class="text-xs text-muted mt-1">${a.type}</p>
+      </div>
+      <div><label class="lbl">طريقة الدفع</label>
+        <div class="grid grid-cols-3 gap-2">
+          ${['كاش','فيزا','تحويل'].map((m,i)=>`
+            <label class="border border-line rounded-xl2 p-3 text-center text-sm cursor-pointer hover:border-primary has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input type="radio" name="pm" value="${m}" ${i===0?'checked':''} class="sr-only">${m}</label>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>
+      <button onclick="confirmPay(${id})" class="bg-mint text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:opacity-90">تأكيد التحصيل</button>
+    </div>`);
+}
+function confirmPay(id){
+  const a = DB.appts.find(x=>x.id===id);
+  a.paid = true; a.method = document.querySelector('input[name="pm"]:checked').value;
+  closeModal(); toast('تم تحصيل '+money(a.fee)+' جنيه'); go(PAGE);
+}
+
+/* إجراءات */
+function checkIn(id){
+  const a = DB.appts.find(x=>x.id===id);
+  a.status = 'في الانتظار'; a.arrived = nowHM();
+  toast(patient(a.pid).name+' في غرفة الانتظار'); go(PAGE);
+}
+function cancelAppt(id){
+  const a = DB.appts.find(x=>x.id===id);
+  openModal(`${modalHead('إلغاء الموعد')}
+    <div class="p-5"><p class="text-sm leading-relaxed">هتلغي موعد <span class="font-semibold">${esc(patient(a.pid).name)}</span>
+      يوم ${fmtShort(a.date)} الساعة ${fmtTime(a.time)}. الميعاد هيرجع متاح للحجز تاني.</p></div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">رجوع</button>
+      <button onclick="doCancel(${id})" class="bg-rose text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:opacity-90">إلغاء الموعد</button>
+    </div>`);
+}
+function doCancel(id){
+  DB.appts.find(x=>x.id===id).status = 'ملغي';
+  closeModal(); toast('الموعد اتلغى','warn'); go(PAGE);
+}
+
+/* بحث سريع */
+function globalSearch(q){
+  const box = $('#searchResults');
+  q = q.trim();
+  if (!q) return box.classList.add('hidden');
+  const res = DB.patients.filter(p=>p.name.includes(q)||p.phone.includes(q)).slice(0,6);
+  box.innerHTML = res.length ? res.map(p=>`
+    <button onclick="$('#globalSearch').value='';$('#searchResults').classList.add('hidden');openFile(${p.id})"
+      class="w-full text-right px-4 py-3 flex items-center gap-3 hover:bg-canvas/70 border-b border-line last:border-0">
+      ${avatar(p.name,'w-8 h-8')}
+      <span class="min-w-0"><span class="block text-sm font-medium truncate">${esc(p.name)}</span>
+      <span class="block text-xs text-muted num">${esc(p.phone)}</span></span>
+    </button>`).join('')
+    : '<p class="px-4 py-6 text-sm text-muted text-center">مفيش نتايج للبحث ده.</p>';
+  box.classList.remove('hidden');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#globalSearch') && !e.target.closest('#searchResults'))
+    $('#searchResults').classList.add('hidden');
+});
+
+/* طباعة */
+/* ═══════════════ الطباعة ═══════════════ */
+const PAPER = { A5:[148,210], A4:[210,297] };
+// لازم تطابق Clinic::DEFAULT_RX على السيرفر
+const RX_DEFAULTS = { paper:'A5', top:45, right:15, bottom:25, left:15, fontScale:100,
+  showHeader:true, showDiagnosis:true, printImage:true, image:null };
+const rxConf = () => ({ ...RX_DEFAULTS, ...(DB.rx || {}) });
+
+/** يطبع ورقة بالمقاس المطلوب بعد ما الصور (زي ورقة الروشتة) تخلص تحميل. */
+async function printSheet(html, paper){
+  const area = $('#printArea');
+  area.innerHTML = `<style>@page{size:${paper};margin:0}</style>${html}`;
+  await Promise.all([...area.querySelectorAll('img')].map(img => img.complete ? null
+    : new Promise(done => { img.onload = img.onerror = done; setTimeout(done, 4000); })));
+  window.print();
+}
+
+function printHead(){
+  const c = DB.clinic;
+  return `<div style="border-bottom:2px solid #0F6F8C;padding-bottom:16px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start">
+    <div><h1 style="margin:0;font-size:22px;color:#0A2E45">${esc(c.name)}</h1>
+    <p style="margin:4px 0 0;color:#5B7185;font-size:13px">${esc(c.doctor)} — ${esc(c.spec)}</p></div>
+    <div style="text-align:left;font-size:12px;color:#5B7185">
+      <p style="margin:0">${esc(c.phone)}</p><p style="margin:2px 0 0">${esc(c.address)}</p></div>
+  </div>`;
+}
+
+/** سطور الروشتة "الدواء — الجرعة — المدة" → [{drug, info}] */
+function rxItems(rx){
+  return String(rx || '').split('\n').map(l=>l.trim()).filter(l=>l && l!=='—').map(l=>{
+    const [drug, ...rest] = l.split(' — ');
+    return { drug: drug.trim(), info: rest.map(x=>x.trim()).filter(Boolean).join(' · ') };
+  });
+}
+
+/**
+ * ورقة الروشتة كاملة بالمليمتر.
+ * من غير صورة: تصميم العيادة الافتراضي. مع صورة ورقة الروشتة: الكلام بيتكتب جوه المساحة الفاضية اللي متحددة في الإعدادات.
+ */
+function rxSheetHtml(r, p, conf, { continuing = [], preview = false } = {}){
+  const c = DB.clinic, [w, h] = PAPER[conf.paper] || PAPER.A5, s = (conf.fontScale || 100) / 100;
+  const img = conf.image, useImg = img && (conf.printImage || preview);
+  const box = img ? `top:${conf.top}mm;right:${conf.right}mm;bottom:${conf.bottom}mm;left:${conf.left}mm` : 'top:10mm;right:11mm;bottom:10mm;left:11mm';
+  const items = rxItems(r.rx);
+  const muted = 'color:#5B7185';
+
+  const header = conf.showHeader ? `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4mm;border-bottom:.6mm solid #0F6F8C;padding-bottom:3mm;margin-bottom:4mm">
+      <div>
+        <div style="font-size:1.6em;font-weight:800;color:#0A2E45;line-height:1.2">${esc(c.name)}</div>
+        ${c.doctor ? `<div style="font-weight:700;margin-top:1mm">${esc(c.doctor)}</div>` : ''}
+        ${c.spec ? `<div style="${muted};font-size:.9em">${esc(c.spec)}</div>` : ''}
+      </div>
+      <div style="text-align:left;font-size:.82em;${muted};line-height:1.7">
+        ${c.phone ? `<div dir="ltr">${esc(c.phone)}</div>` : ''}
+        ${c.address ? `<div>${esc(c.address)}</div>` : ''}
+        ${c.open && c.close ? `<div>المواعيد: ${fmtTime(c.open)} – ${fmtTime(c.close)}</div>` : ''}
+      </div>
+    </div>` : '';
+
+  const patientStrip = `
+    <div style="display:flex;flex-wrap:wrap;gap:1.5mm 6mm;background:#EEF3F7;border-radius:2.5mm;padding:2.2mm 3.5mm;font-size:.92em">
+      <span><b>المريض:</b> ${esc(p.name)}</span>
+      ${p.age ? `<span><b>السن:</b> ${esc(p.age)} سنة</span>` : ''}
+      <span><b>التاريخ:</b> ${fmtShort(r.date)}</span>
+      ${p.fileNo ? `<span><b>ملف:</b> ${fileNo(p)}</span>` : ''}
+    </div>
+    ${p.allergy ? `<div style="color:#C2434B;font-weight:700;font-size:.88em;margin-top:1.8mm">⚠ حساسية: ${esc(p.allergy)}</div>` : ''}`;
+
+  const diagnosis = conf.showDiagnosis && r.diagnosis && r.diagnosis!=='—' ? `
+    <div style="margin-top:3.5mm"><span style="${muted};font-size:.85em">التشخيص: </span><b>${esc(r.diagnosis)}</b></div>` : '';
+
+  const meds = `
+    <div style="display:flex;align-items:flex-start;gap:3mm;margin-top:4mm">
+      <div style="font-family:'Times New Roman',serif;font-size:2.4em;line-height:1;color:#0F6F8C;font-weight:700;margin-top:-1mm">&#8478;</div>
+      <div style="flex:1;min-width:0">
+        ${items.length ? items.map((m,i)=>`
+          <div style="display:flex;gap:2.5mm;padding:1.8mm 0;${i<items.length-1?'border-bottom:.2mm dashed #C3D2DE;':''}break-inside:avoid">
+            <span style="flex:none;width:5.2mm;height:5.2mm;border-radius:50%;background:#0F6F8C;color:#fff;font-size:.72em;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:.6mm">${i+1}</span>
+            <div style="min-width:0"><div style="font-weight:700;font-size:1.08em">${esc(m.drug)}</div>
+              ${m.info ? `<div style="color:#33475B;font-size:.93em">${esc(m.info)}</div>` : ''}</div>
+          </div>`).join('') : `<div style="${muted};padding-top:2mm">—</div>`}
+      </div>
+    </div>
+    ${continuing.length ? `<div style="margin-top:3mm;font-size:.85em;${muted}"><b>مستمر مع الحالة:</b> ${continuing.map(t=>esc(t.drug + (t.dose ? ' (' + t.dose + ')' : ''))).join('، ')}</div>` : ''}`;
+
+  const extras = r.tests || r.next ? `
+    <div style="display:flex;gap:3mm;margin-top:4mm;font-size:.9em">
+      ${r.tests ? `<div style="flex:1;border:.3mm solid #DCE6EE;border-radius:2mm;padding:2mm 3mm"><div style="${muted};font-size:.85em">مطلوب عمل</div>${esc(r.tests)}</div>` : ''}
+      ${r.next ? `<div style="flex:1;border:.3mm solid #DCE6EE;border-radius:2mm;padding:2mm 3mm"><div style="${muted};font-size:.85em">المتابعة</div>${esc(r.next)}</div>` : ''}
+    </div>` : '';
+
+  const footer = img ? '' : `
+    <div style="margin-top:auto;padding-top:5mm;display:flex;justify-content:space-between;align-items:flex-end;font-size:.82em;${muted}">
+      <span>${esc(c.name)}${c.phone ? ' · <span dir="ltr">' + esc(c.phone) + '</span>' : ''}</span>
+      <span style="text-align:center">توقيع الطبيب<br><span style="display:inline-block;width:38mm;border-bottom:.3mm solid #5B7185;height:9mm"></span></span>
+    </div>`;
+
+  return `<div style="position:relative;width:${w}mm;height:${h}mm;overflow:hidden;background:#fff;direction:rtl;font-family:${FONT},sans-serif;color:#0B2239;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    ${useImg ? `<img src="${esc(img)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;${conf.printImage ? '' : 'opacity:.35'}">` : ''}
+    <div style="position:absolute;${box};display:flex;flex-direction:column;font-size:${(10.5*s).toFixed(2)}pt;line-height:1.55;${preview && img ? 'outline:.5mm dashed #C77A16;outline-offset:1mm' : ''}">
+      ${header}${patientStrip}${diagnosis}${meds}${extras}${footer}
+    </div>
+  </div>`;
+}
+
+function printRx(rid){
+  const r = DB.records.find(x=>x.id===rid), p = patient(r.pid), conf = rxConf();
+  // الأدوية اللي في الروشتة نفسها ما تتكررش تاني تحت "مستمر مع الحالة"
+  const inRx = new Set(rxItems(r.rx).map(m=>normalizeSearch(m.drug)));
+  const continuing = DB.treatments.filter(t=>t.pid===r.pid && t.active && !inRx.has(normalizeSearch(t.drug)));
+  printSheet(rxSheetHtml(r, p, conf, { continuing }), conf.paper);
+}
+
+function printInvoice(aid){
+  const a = DB.appts.find(x=>x.id===aid), p = patient(a.pid);
+  printSheet(`<div style="font-family:${FONT},sans-serif;direction:rtl;padding:14mm">
+    ${printHead()}
+    <h2 style="font-size:18px;margin:0 0 20px">فاتورة رقم ${String(a.id).slice(-6)}</h2>
+    <p style="font-size:14px;margin:0 0 4px"><b>المريض:</b> ${esc(p.name)}</p>
+    <p style="font-size:14px;margin:0 0 20px"><b>التاريخ:</b> ${fmtDate(a.date)} — ${fmtTime(a.time)}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      <tr style="background:#EEF3F7"><th style="text-align:right;padding:10px">البيان</th><th style="text-align:left;padding:10px">المبلغ</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #DCE6EE">${esc(a.type)}</td>
+          <td style="padding:10px;text-align:left;border-bottom:1px solid #DCE6EE">${money(a.fee)} ج</td></tr>
+      <tr><td style="padding:10px;font-weight:700">الإجمالي (${esc(a.method)})</td>
+          <td style="padding:10px;text-align:left;font-weight:700">${money(a.fee)} ج</td></tr>
+    </table>
+    <p style="margin-top:40px;font-size:12px;color:#5B7185">شكراً لثقتكم — ${esc(DB.clinic.name)}</p>
+  </div>`, 'A4');
+}
+
+/* ── إعدادات الروشتة: صورة الورقة ومكان الكتابة عليها ── */
+let RX_DRAFT = null;
+const RX_SAMPLE = {
+  r: { date: iso(new Date()), diagnosis: 'التهاب في جدار المعدة', tests: 'صورة دم CBC، H. Pylori', next: 'بعد أسبوعين',
+       rx: 'أوميبرازول ٢٠مج — مرة يومياً — قبل الأكل — ١٤ يوم\nدومبيريدون ١٠مج — ٣ مرات يومياً — قبل الأكل — ٧ أيام\nسيميثيكون — عند اللزوم — بعد الأكل' },
+  p: { name: 'اسم المريض', age: 35, fileNo: 12, allergy: '' },
+};
+
+function rxSettingsPanel(owner){
+  const d = RX_DRAFT, dis = owner && Sync.canWrite() ? '' : 'disabled';
+  const num = (key, label) => `<div><label class="lbl" for="rx_${key}">${label}</label>
+    <input id="rx_${key}" type="number" min="0" max="150" step="1" ${dis} value="${esc(d[key])}" oninput="rxDraftSet('${key}', this.valueAsNumber||0)" class="field num"></div>`;
+  const check = (key, label, hint='') => `<label class="flex items-start gap-2.5 text-sm cursor-pointer">
+    <input type="checkbox" ${dis} ${d[key]?'checked':''} onchange="rxDraftSet('${key}', this.checked)" class="mt-1 accent-[#0F6F8C]">
+    <span>${label}${hint?`<span class="block text-xs text-muted">${hint}</span>`:''}</span></label>`;
+  return `
+    <h2 class="font-semibold">شكل الروشتة</h2>
+    <p class="text-muted text-xs mt-1">${owner ? 'لو عندك ورق روشتة مطبوع باسم العيادة، ارفع صورة أو سكان ليه فاضي وحدد مكان الكتابة — الروشتة هتتطبع عليه.' : 'صاحب العيادة بس هو اللي يقدر يغيّر شكل الروشتة.'}</p>
+    <div class="grid lg:grid-cols-[1fr_auto] gap-6 mt-5 items-start">
+      <div class="space-y-5">
+        <div>
+          <p class="lbl">صورة ورقة الروشتة</p>
+          ${d.image ? `<div class="flex items-center gap-3 border border-line rounded-xl2 p-3">
+              <img src="${esc(d.image)}" alt="" class="w-12 h-16 object-cover rounded border border-line">
+              <span class="text-sm flex-1">الروشتة بتتطبع على الصورة دي</span>
+              ${owner ? `<button onclick="pickRxTemplate()" ${dis} class="text-xs border border-line px-3 py-1.5 rounded-lg hover:border-primary hover:text-primary">تغيير</button>
+              <button onclick="removeRxTemplate()" ${dis} class="text-xs text-muted hover:text-rose px-2">شيل</button>` : ''}
+            </div>`
+          : owner ? `<button onclick="pickRxTemplate()" ${dis} class="w-full border-2 border-dashed border-line rounded-xl2 p-5 text-center hover:border-primary transition">
+              <span class="block text-sm font-medium">ارفع صورة ورقة الروشتة</span>
+              <span class="block text-xs text-muted mt-1">JPG أو PNG لحد ٥ ميجا — صوّرها فاضية ومفرودة، أو اعملها سكان</span></button>`
+          : '<p class="text-sm text-muted">مفيش — بيتطبع التصميم الافتراضي.</p>'}
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="lbl" for="rx_paper">مقاس الورق</label>
+            <select id="rx_paper" ${dis} onchange="rxDraftSet('paper', this.value)" class="field">
+              <option value="A5" ${d.paper==='A5'?'selected':''}>A5 — نص ورقة (الروشتة العادية)</option>
+              <option value="A4" ${d.paper==='A4'?'selected':''}>A4 — ورقة كاملة</option></select></div>
+          <div><label class="lbl" for="rx_fontScale">حجم الخط <span class="num">(${d.fontScale}%)</span></label>
+            <input id="rx_fontScale" type="range" min="80" max="130" step="5" ${dis} value="${d.fontScale}" oninput="rxDraftSet('fontScale', this.valueAsNumber); this.previousElementSibling.lastElementChild.textContent='('+this.value+'%)'" class="w-full mt-3 accent-[#0F6F8C]"></div>
+        </div>
+        ${d.image ? `<div>
+          <p class="lbl">مكان الكتابة على الورقة (بالمليمتر من الحافة) — المستطيل البرتقالي في المعاينة</p>
+          <div class="grid grid-cols-4 gap-3">${num('top','من فوق')}${num('bottom','من تحت')}${num('right','من اليمين')}${num('left','من الشمال')}</div>
+        </div>` : ''}
+        <div class="space-y-3">
+          ${check('showHeader', 'اطبع اسم العيادة والدكتور فوق', d.image ? 'اقفلها لو ورقتك مطبوع عليها الاسم' : '')}
+          ${check('showDiagnosis', 'اطبع التشخيص على الروشتة')}
+          ${d.image ? check('printImage', 'اطبع صورة الورقة نفسها', 'اقفلها لو بتحط ورق الروشتة المطبوع في الطابعة — الصورة هتبقى للمعاينة بس') : ''}
+        </div>
+        <div class="flex flex-wrap gap-3 pt-5 border-t border-line">
+          ${dis ? '' : `<button id="rxSave" onclick="saveRxSettings()" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">حفظ شكل الروشتة</button>`}
+          <button onclick="printSheet(rxSheetHtml(RX_SAMPLE.r, RX_SAMPLE.p, RX_DRAFT), RX_DRAFT.paper)" class="border border-line text-sm px-5 py-2.5 rounded-xl2 hover:border-primary hover:text-primary">طباعة تجربة</button>
+        </div>
+      </div>
+      <div>
+        <p class="lbl text-center">معاينة</p>
+        <div id="rxPreview" class="mx-auto bg-canvas rounded-xl2 p-3"></div>
+      </div>
+    </div>`;
+}
+
+function renderRxPreview(){
+  const box = $('#rxPreview'); if (!box || !RX_DRAFT) return;
+  const [w, h] = PAPER[RX_DRAFT.paper] || PAPER.A5, px = 3.7795, k = 260 / (w * px);
+  box.style.width = `${w*px*k + 24}px`;
+  box.innerHTML = `<div style="width:${w*px*k}px;height:${h*px*k}px;overflow:hidden;box-shadow:0 6px 20px -10px rgba(11,34,57,.35)">
+    <div style="transform:scale(${k});transform-origin:top right;width:${w}mm">${rxSheetHtml(RX_SAMPLE.r, RX_SAMPLE.p, RX_DRAFT, { preview:true })}</div></div>`;
+}
+function rxDraftSet(key, value){ RX_DRAFT[key] = value; renderRxPreview(); }
+
+function pickRxTemplate(){
+  const i = document.createElement('input');
+  i.type = 'file'; i.accept = 'image/png,image/jpeg,image/webp';
+  i.onchange = () => i.files[0] && uploadRxTemplate(i.files[0]);
+  i.click();
+}
+async function uploadRxTemplate(file){
+  if (file.size > 5 * 1048576) return toast('الصورة أكبر من ٥ ميجا','err');
+  const form = new FormData(); form.append('image', file);
+  toast('بيرفع الصورة...','warn');
+  try {
+    const rx = await Sync.api('/clinic/rx-template', { method:'POST', body: form });
+    applyRxSettings(rx);
+    // الورقة المطبوعة غالباً عليها اسم العيادة، فبنقفل الترويسة ونسيبه يظبط مكان الكتابة
+    SET_TAB = 'rx';
+    RX_DRAFT = { ...rxConf(), showHeader: false };
+    go('settings');
+    toast('الصورة اترفعت — ظبط مكان الكتابة من المعاينة واضغط حفظ');
+  } catch (e) { toast(apiError(e), 'err'); }
+}
+async function removeRxTemplate(){
+  if (!confirm('تشيل صورة ورقة الروشتة؟ هترجع للتصميم الافتراضي.')) return;
+  try {
+    applyRxSettings(await Sync.api('/clinic/rx-template', { method:'DELETE' }));
+    RX_DRAFT = rxConf(); go('settings'); toast('رجعنا للتصميم الافتراضي');
+  } catch (e) { toast(apiError(e), 'err'); }
+}
+async function saveRxSettings(){
+  const d = RX_DRAFT, btn = $('#rxSave'); btn.disabled = true;
+  try {
+    applyRxSettings(await Sync.api('/clinic/rx', { method:'PUT', body: {
+      paper:d.paper, top:d.top, right:d.right, bottom:d.bottom, left:d.left, fontScale:d.fontScale,
+      showHeader:!!d.showHeader, showDiagnosis:!!d.showDiagnosis, printImage:!!d.printImage } }));
+    toast('شكل الروشتة اتحفظ');
+  } catch (e) { toast(apiError(e), 'err'); }
+  finally { btn.disabled = false; }
+}
+function applyRxSettings(rx){
+  DB.rx = rx;
+  Sync.saveSettingsLocally();
+  Sync.warmUrl(rx.image);
+}
+
+/* ═══════════════ الربط مع السيرفر والتخزين على الجهاز ═══════════════ */
+/** كل تعديل بيتسجل على الجهاز فوراً وبيترفع للسيرفر في الخلفية (sync.js). */
+function persistData(){ Sync.commit(); }
+
+/** رقم الملف بيتحدد من السيرفر، فالمريض الجديد اللي لسه ما اترفعش ملوش رقم. */
+const fileNo = p => p.fileNo ? String(p.fileNo).padStart(4,'0') : 'جديد';
+
+function minutesSince(hm){
+  const [h,m] = String(hm).split(':').map(Number), now = new Date();
+  return now.getHours()*60 + now.getMinutes() - (h*60 + m);
+}
+function buildAlerts(){
+  const t = todayAppts(), out = [];
+  t.filter(a=>a.status==='في الانتظار' && a.arrived && minutesSince(a.arrived) >= 30).forEach(a=>
+    out.push({ t:'انتظار طويل', d:`${patient(a.pid).name} مستني من ${minutesSince(a.arrived)} دقيقة`, kind:'late' }));
+  t.filter(a=>a.status==='محجوز' && minutesSince(a.time) >= 20).forEach(a=>
+    out.push({ t:'مريض متأخر عن ميعاده', d:`${patient(a.pid).name} — موعد ${fmtTime(a.time)}`, kind:'late' }));
+  const unpaid = t.filter(a=>a.status==='تم الكشف' && !a.paid);
+  if (unpaid.length) out.push({ t:'كشوفات ما اتحصّلتش', d:`${unpaid.length} كشف خلص ولسه رسومه ما اتدفعتش`, kind:'follow' });
+  if (Sync.status.pending && !Sync.status.online) out.push({ t:'شغال من غير نت', d:`${Sync.status.pending} تغيير هيترفع أول ما النت يرجع`, kind:'lab' });
+  return out.length ? out.slice(0,5) : [{ t:'مفيش تنبيهات', d:'كل حاجة ماشية تمام.', kind:'follow' }];
+}
+
+/* ── الدخول والتسجيل ── */
+function showAuth(which){
+  $('#authLogin').classList.toggle('hidden', which!=='login');
+  $('#authRegister').classList.toggle('hidden', which!=='register');
+  if (which==='register') loadPlans();
+}
+async function loadPlans(){
+  const sel = $('#rgPlan'); if (sel.options.length) return;
+  const wanted = new URLSearchParams(location.search).get('plan') || 'basic';
+  try {
+    const plans = await Sync.api('/plans');
+    sel.innerHTML = plans.map(p=>`<option value="${esc(p.slug)}" ${p.slug===wanted?'selected':''}>${esc(p.name)} — ${money(p.price)} ج/شهر</option>`).join('');
+  } catch { sel.innerHTML = '<option value="basic">أساسي</option>'; }
+}
+function authError(el, err){
+  el.textContent = err.offline ? 'أول دخول محتاج نت. اتأكد من الاتصال وجرّب تاني.' : apiError(err);
+  el.classList.remove('hidden');
+}
+async function doLogin(e){
+  e.preventDefault();
+  const btn = $('#liBtn'), err = $('#liErr');
+  err.classList.add('hidden'); btn.disabled = true; btn.textContent = 'بيدخل...';
+  try {
+    await Sync.login($('#liEmail').value.trim(), $('#liPass').value);
+    $('#authNotice').classList.add('hidden');
+    signIn();
+  } catch (x) { authError(err, x); }
+  finally { btn.disabled = false; btn.textContent = 'دخول'; }
+}
+async function doRegister(e){
+  e.preventDefault();
+  const btn = $('#rgBtn'), err = $('#rgErr');
+  err.classList.add('hidden'); btn.disabled = true; btn.textContent = 'بيسجّل...';
+  try {
+    await Sync.register({ clinic_name:$('#rgClinic').value.trim(), specialty:$('#rgSpec').value.trim(), phone:$('#rgPhone').value.trim(),
+      name:$('#rgName').value.trim(), email:$('#rgEmail').value.trim(), password:$('#rgPass').value, plan:$('#rgPlan').value });
+    history.replaceState(null, '', '/app/');
+    signIn();
+    toast('أهلاً بيك! العيادة اتسجّلت — ابدأ بإضافة أول مريض');
+  } catch (x) { authError(err, x); }
+  finally { btn.disabled = false; btn.textContent = 'ابدأ التجربة المجانية'; }
+}
+
+/* ── حالة الاشتراك والمزامنة ── */
+function renderBanner(){
+  const box = $('#subBanner'), sub = Sync.account && Sync.account.clinic;
+  if (!sub) return box.classList.add('hidden');
+  let html = '';
+  if (!sub.canWrite) {
+    html = `<div class="bg-rose text-white text-sm px-4 lg:px-8 py-2.5">${sub.state==='suspended'?'الحساب موقوف':'الاشتراك منتهي'} — البيانات متاحة للعرض بس ومش هتقدر تعدّل لحد التجديد. كلّم الدعم للتجديد.</div>`;
+  } else if (sub.state==='trial' && sub.daysLeft <= 5) {
+    html = `<div class="bg-amber/10 text-amber text-sm px-4 lg:px-8 py-2.5">فاضل <b class="num">${sub.daysLeft}</b> يوم في الفترة التجريبية — اشترك عشان الشغل ميقفش.</div>`;
+  }
+  box.innerHTML = html;
+  box.classList.toggle('hidden', !html);
+}
+function renderSyncStatus(st){
+  const dot = $('#syncDot'), text = $('#syncText'), sub = $('#syncSub');
+  if (!dot) return;
+  const [label, tone] = st.error ? [st.error, 'bg-rose']
+    : !st.online ? ['شغال من غير نت', 'bg-amber']
+    : st.syncing ? ['بيزامن...', 'bg-primary']
+    : st.pending ? ['في تغييرات مستنية', 'bg-amber']
+    : ['متزامن', 'bg-mint'];
+  dot.className = `w-2 h-2 rounded-full shrink-0 ${tone}`;
+  text.textContent = label;
+  sub.textContent = st.pending ? `${st.pending} تغيير هيترفع` : st.lastSync ? 'آخر مزامنة ' + new Date(st.lastSync).toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'}) : '';
+  $('#syncIcon').classList.toggle('animate-spin', !!st.syncing);
+}
+function manualSync(){
+  if (!Sync.status.online) return toast('مفيش نت دلوقتي — التعديلات محفوظة على الجهاز','warn');
+  Sync.sync().then(()=>{ if (!Sync.status.error) toast('كل البيانات متزامنة'); });
+}
+const REJECT_MSG = {
+  plan_limit_patients: 'وصلت للحد الأقصى من المرضى في باقتك — المريض الجديد ما اتسجلش على السيرفر.',
+  plan_limit_storage: 'مساحة الملفات في باقتك خلصت — الملف فاضل على الجهاز لحد ما ترقّي الباقة.',
+  forbidden: 'حسابك مالوش صلاحية على التعديل ده، فرجع زي ما كان.',
+  unknown_patient: 'المريض المرتبط بالتعديل ده مش موجود على السيرفر.',
+};
+function normalizeSearch(value){
+  return String(value||'').toLowerCase().replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/[\s\-()]/g,'');
+}
+function findPatients(q){
+  q=normalizeSearch(q);
+  return q ? DB.patients.filter(p=>[p.name,p.phone,String(p.fileNo||'')].some(v=>normalizeSearch(v).includes(q))) : [];
+}
+function patientSearchModal(){
+  openModal(modalHead('ابحث عن المريض أولاً','ابحث بالاسم أو التليفون أو رقم الملف ثم راجع بياناته قبل الكشف') + '<div class="p-5"><input id="visitSearch" class="field" placeholder="الاسم / التليفون / رقم الملف" oninput="renderPatientSearch(this.value)"><div id="visitResults" class="mt-4">اكتب بيانات المريض للبحث.</div></div>');
+  $('#visitSearch').focus();
+}
+function renderPatientSearch(q){
+  const list=findPatients(q);
+  $('#visitResults').innerHTML = !normalizeSearch(q) ? 'اكتب بيانات المريض للبحث.' : list.map(p=>`<button class="block w-full text-right border border-line rounded-xl2 p-3 mb-2" onclick="${ROLE==='doctor'?'startExam':'openFile'}(${p.id})">${esc(p.name)} · ${esc(p.phone)} <span class="text-muted">ملف ${fileNo(p)} · ${p.age} سنة</span></button>`).join('') + '<button class="text-primary mt-3" onclick="patientModal(true)">مريض جديد — تسجيل البيانات</button>';
+}
+function nursePatientPage(){
+  const p=patient(CURRENT_PID);
+  return `<div class="space-y-5"><button class="text-primary" onclick="go('patients')">الرجوع للبحث</button>
+    <div class="bg-white border border-line rounded-xl2 p-6"><h2 class="text-xl font-bold">${esc(p.name)}</h2><p class="text-muted mt-2">ملف ${fileNo(p)} · ${esc(p.phone)} · ${p.age} سنة · ${esc(p.gender)}</p>
+    <p class="mt-4">?الرجوع للبحث??: ${esc(p.chronic)} ? الحساسية: ${esc(p.allergy||'غير مسجل')}</p>
+    <p class="mt-3">الضغط ${esc(p.bp||'—')} ? السكر ${esc(p.sugar||'—')} ? الوزن ${esc(p.weight||'—')} ? الطول ${esc(p.height||'—')}</p>
+    <div class="flex gap-3 mt-5"><button class="field" onclick="editPatient(${p.id})">تعديل بيانات المريض</button><button class="field" onclick="vitalsModal(${p.id})">تسجيل القياسات</button></div></div>
+    <div class="bg-white border border-line rounded-xl2 p-6"><label class="lbl">شكوى المريض / ملاحظات التمريض</label><textarea id="intakeNote" class="field" rows="4">${esc(p.note||'')}</textarea><label class="lbl mt-4" for="intakeFee">سعر الكشف (جنيه)</label><input id="intakeFee" type="number" min="0" step="0.01" required class="field num" value="${DB.appts.find(a=>a.pid===p.id && a.date===iso(TODAY) && ['محجوز','في الانتظار'].includes(a.status))?.fee ?? p.visitFee ?? DB.fees['كشف']}"><button class="bg-primary text-white px-5 py-3 rounded-xl2 mt-4" onclick="saveIntake(${p.id})">حفظ وإرسال لانتظار الطبيب</button></div></div>`;
+}
+function saveIntake(pid){
+  if (ROLE!=='nurse') return;
+  const fee=readVisitFee('#intakeFee');
+  if (fee===null) return;
+  patient(pid).note=$('#intakeNote').value.trim();
+  const active=DB.appts.find(a=>a.pid===pid && a.date===iso(TODAY) && ['محجوز','في الانتظار'].includes(a.status));
+  if(active) {
+    if(active.paid && active.fee!==fee) return toast('لا يمكن تغيير سعر كشف تم تحصيله','err');
+    if (active.status==='محجوز') { active.status='في الانتظار'; active.arrived=nowHM(); }
+    active.fee=fee;
+  }
+  else DB.appts.push({id:Sync.newId(),pid,date:iso(TODAY),time:nowHM(),arrived:nowHM(),type:'كشف',status:'في الانتظار',fee,paid:false,method:''});
+  patient(pid).visitFee=fee;
+  toast('تم حفظ البيانات وإضافة المريض لانتظار الطبيب'); go('patient');
+}
+
+/* ═══════════════ التشغيل ═══════════════ */
+Sync.hooks.onStatus = st => renderSyncStatus(st);
+Sync.hooks.onAccount = () => {
+  renderBanner();
+  if (PAGE==='settings' && !$('#app').classList.contains('hidden') && $('#modal').classList.contains('hidden')) go('settings');
+};
+Sync.hooks.onRemote = () => {
+  if ($('#app').classList.contains('hidden')) return;
+  notifyArrivals();
+  $('#sbClinic').textContent = DB.clinic.name || Sync.account.clinic.name;
+  // شاشة الكشف والمودالات مفيهاش إعادة رسم عشان اللي بيتكتب ميضيعش
+  if (PAGE==='exam' || PAGE==='settings' || !$('#modal').classList.contains('hidden')) return updateNextBtn();
+  go(PAGE);
+};
+Sync.hooks.onReadOnly = () => toast('الاشتراك منتهي — التعديل مش متاح لحد التجديد','err');
+Sync.hooks.onRejected = r => toast(REJECT_MSG[r.error] || ('السيرفر رفض تعديل: ' + r.error), 'err');
+Sync.hooks.onAuthLost = () => {
+  $('#authNotice').textContent = 'الجلسة انتهت. ادخل تاني عشان المزامنة تكمل — بياناتك والتعديلات اللي ما اترفعتش محفوظة على الجهاز.';
+  $('#authNotice').classList.remove('hidden');
+  $('#liEmail').value = Sync.account?.user.email || '';
+  $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
+  closeModal();
+};
+Sync.hooks.onDormant = () => $('#dormant').classList.remove('hidden');
+
+(async () => {
+  try { setFont(localStorage.getItem('clinic-font') || 'Tajawal', true); } catch {}
+  await Sync.boot(DB);
+  if (Sync.account && Sync.hasToken) signIn();
+  else if (Sync.account) Sync.hooks.onAuthLost();
+  else if (location.hash==='#register') showAuth('register');
+  Sync.start();
+})();
+</script>
+</body>
+</html>
