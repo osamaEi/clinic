@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Clinic;
+use App\Support\ClinicSettings;
+use App\Support\PrescriptionTemplates;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ClinicController extends Controller
 {
-    public function update(Request $request): JsonResponse|array
+    public function update(Request $request, ClinicSettings $settings): JsonResponse|array
     {
         $clinic = $this->writableClinic($request);
         if ($clinic instanceof JsonResponse) {
@@ -31,26 +32,11 @@ class ClinicController extends Controller
             'fees.*' => 'numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($clinic, $data) {
-            $clinic->fill([
-                'name' => $data['clinic']['name'],
-                'specialty' => $data['clinic']['spec'] ?? null,
-                'doctor_name' => $data['clinic']['doctor'] ?? null,
-                'phone' => $data['clinic']['phone'] ?? null,
-                'address' => $data['clinic']['address'] ?? null,
-                'open_time' => $data['clinic']['open'],
-                'close_time' => $data['clinic']['close'],
-                'fees' => array_map(fn ($v) => $v + 0, $data['fees']),
-            ]);
-            $clinic->touchSettings();
-            $clinic->save();
-        });
-
-        return $clinic->fresh()->toClientSettings();
+        return $settings->update($clinic, $data)->toClientSettings();
     }
 
     /** Prescription print layout (paper size, writing area on the template, what to show). */
-    public function updateRx(Request $request): JsonResponse|array
+    public function updateRx(Request $request, ClinicSettings $settings): JsonResponse|array
     {
         $clinic = $this->writableClinic($request);
         if ($clinic instanceof JsonResponse) {
@@ -69,17 +55,11 @@ class ClinicController extends Controller
             'printImage' => 'required|boolean',
         ]);
 
-        DB::transaction(function () use ($clinic, $data) {
-            $clinic->rx_settings = array_map(fn ($v) => is_numeric($v) && ! is_bool($v) ? $v + 0 : $v, $data);
-            $clinic->touchSettings();
-            $clinic->save();
-        });
-
-        return $clinic->fresh()->rxClientSettings();
+        return $settings->updateRx($clinic, $data)->rxClientSettings();
     }
 
     /** Scan/photo of the clinic's printed prescription paper; the prescription is printed on top of it. */
-    public function uploadRxTemplate(Request $request): JsonResponse|array
+    public function uploadRxTemplate(Request $request, PrescriptionTemplates $templates): JsonResponse|array
     {
         $clinic = $this->writableClinic($request);
         if ($clinic instanceof JsonResponse) {
@@ -88,39 +68,17 @@ class ClinicController extends Controller
 
         $request->validate(['image' => 'required|file|mimes:jpg,jpeg,png,webp|max:5120']);
 
-        $old = $clinic->rx_template_path;
-        $path = $request->file('image')->store("clinics/{$clinic->id}/rx-template", Clinic::RX_TEMPLATE_DISK);
-
-        DB::transaction(function () use ($clinic, $path) {
-            $clinic->rx_template_path = $path;
-            $clinic->touchSettings();
-            $clinic->save();
-        });
-        if ($old) {
-            Storage::disk(Clinic::RX_TEMPLATE_DISK)->delete($old);
-        }
-
-        return $clinic->fresh()->rxClientSettings();
+        return $templates->upload($clinic, $request->file('image'))->rxClientSettings();
     }
 
-    public function deleteRxTemplate(Request $request): JsonResponse|array
+    public function deleteRxTemplate(Request $request, PrescriptionTemplates $templates): JsonResponse|array
     {
         $clinic = $this->writableClinic($request);
         if ($clinic instanceof JsonResponse) {
             return $clinic;
         }
 
-        $old = $clinic->rx_template_path;
-        DB::transaction(function () use ($clinic) {
-            $clinic->rx_template_path = null;
-            $clinic->touchSettings();
-            $clinic->save();
-        });
-        if ($old) {
-            Storage::disk(Clinic::RX_TEMPLATE_DISK)->delete($old);
-        }
-
-        return $clinic->fresh()->rxClientSettings();
+        return $templates->delete($clinic)->rxClientSettings();
     }
 
     /** Signed, token-free so it works as <img src>; the file name changes on every upload, so caches never go stale. */

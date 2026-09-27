@@ -3,20 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Clinic;
-use App\Models\MedicalRecord;
-use App\Models\Patient;
 use App\Models\PatientFile;
+use App\Support\FileUploadRejected;
+use App\Support\PatientFileUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
 {
     /** Upload a file queued offline. Idempotent on the client-generated id. */
-    public function store(Request $request): JsonResponse|array
+    public function store(Request $request, PatientFileUpload $uploads): JsonResponse
     {
         $clinic = $request->user()->clinic()->with('plan')->first();
         if (! $clinic->canWrite()) {
@@ -34,46 +32,18 @@ class FileController extends Controller
             'file' => 'required|file|max:20480|mimes:jpg,jpeg,png,gif,webp,heic,pdf',
         ]);
 
-        if ($existing = PatientFile::withTrashed()->find($data['id'])) {
-            return ['row' => $existing->trashed() ? null : $existing->toClient()];
-        }
-        if (PatientFile::withoutGlobalScopes()->withTrashed()->whereKey($data['id'])->exists()) {
-            return response()->json(['message' => 'id_conflict'], 409);
-        }
-        abort_unless(Patient::withTrashed()->whereKey($data['pid'])->exists(), 422, 'unknown_patient');
-        if (! empty($data['rid'])) {
-            abort_unless(MedicalRecord::withTrashed()->whereKey($data['rid'])->exists(), 422, 'unknown_record');
-        }
+        try {
+            $result = $uploads->store($clinic, $data, $request->file('file'));
+        } catch (FileUploadRejected $exception) {
+            $payload = ['message' => $exception->getMessage()];
+            if ($exception->error !== null) {
+                $payload['error'] = $exception->error;
+            }
 
-        $upload = $request->file('file');
-        $limitMb = $clinic->plan->max_storage_mb;
-        if ($limitMb !== null && $clinic->storageUsedBytes() + $upload->getSize() > $limitMb * 1048576) {
-            return response()->json(['message' => 'مساحة التخزين في باقتك خلصت.', 'error' => 'plan_limit_storage'], 422);
+            return response()->json($payload, $exception->status);
         }
 
-        $path = $upload->store("clinics/{$clinic->id}/files", PatientFile::DISK);
-
-        $file = DB::transaction(function () use ($clinic, $data, $upload, $path) {
-            Clinic::query()->whereKey($clinic->id)->lockForUpdate()->first();
-            $file = new PatientFile;
-            $file->id = $data['id'];
-            $file->clinic_id = $clinic->id;
-            $file->patient_id = $data['pid'];
-            $file->record_id = $data['rid'] ?? null;
-            $file->name = mb_substr($upload->getClientOriginalName(), 0, 255);
-            $file->mime = $upload->getMimeType() ?: 'application/octet-stream';
-            $file->size = $upload->getSize();
-            $file->kind = $data['kind'] ?? null;
-            $file->note = $data['note'] ?? null;
-            $file->date = isset($data['date']) ? substr($data['date'], 0, 10) : now()->toDateString();
-            $file->path = $path;
-            $file->client_updated_at = $data['updatedAt'];
-            $file->save();
-
-            return $file;
-        });
-
-        return response()->json(['row' => $file->refresh()->toClient()], 201);
+        return response()->json(['row' => $result->file?->toClient()], $result->created ? 201 : 200);
     }
 
     /** Signed, token-free download so <img src> works; see PatientFile::signedUrl(). */
