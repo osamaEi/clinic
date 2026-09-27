@@ -30,6 +30,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Standalone (Desktop) Mode
+    |--------------------------------------------------------------------------
+    |
+    | On when the app runs on a single clinic's PC (the NativePHP desktop build)
+    | instead of as the hosted SaaS. There is no billing there, so clinics get
+    | the top plan and never drop to read-only when a trial ends.
+    |
+    */
+
+    'standalone' => (bool) env('CLINIC_STANDALONE', env('NATIVEPHP_RUNNING', false)),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

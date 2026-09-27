@@ -7,7 +7,7 @@
  *  - /api/*: never cached; the app keeps its own data in IndexedDB
  * Bump VERSION on every deploy that changes shell files.
  */
-const VERSION = 'v7';
+const VERSION = 'v8';
 const SHELL_CACHE = 'shell-' + VERSION;
 const FILES_CACHE = 'files-v1';
 const FONTS_CACHE = 'fonts-v1';

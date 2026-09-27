@@ -1,0 +1,33 @@
+{
+  "name": "clinic-desktop",
+  "productName": "عيادتي",
+  "version": "1.0.0",
+  "description": "Desktop shell for the clinic PWA (connects to the clinic server)",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.clinic.desktop",
+    "productName": "Clinic",
+    "executableName": "Clinic",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "offline.html", "config.json", "build/icon.png"],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "عيادتي"
+    }
+  }
+}

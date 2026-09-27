@@ -14,7 +14,8 @@ class ClinicRegistration
      */
     public function register(array $data): User
     {
-        $plan = Plan::where('slug', $data['plan'] ?? 'basic')->where('is_active', true)->firstOrFail();
+        $slug = config('app.standalone') ? 'center' : ($data['plan'] ?? 'basic');
+        $plan = Plan::where('slug', $slug)->where('is_active', true)->firstOrFail();
 
         return DB::transaction(function () use ($data, $plan): User {
             $clinic = Clinic::create([

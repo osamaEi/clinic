@@ -54,6 +54,30 @@ class SaasTest extends ApiTestCase
         $this->push($this->change('patients', $this->cid(), $this->patientData()))->assertStatus(402);
     }
 
+    public function test_standalone_desktop_clinic_gets_top_plan_and_never_expires(): void
+    {
+        config(['app.standalone' => true]);
+
+        $this->postJson('/api/register', [
+            'clinic_name' => 'عيادة النور', 'name' => 'د. سارة', 'email' => 'sara@test.local', 'password' => 'secret123', 'plan' => 'basic',
+        ])->assertCreated()
+            ->assertJsonPath('clinic.plan.slug', 'center')
+            ->assertJsonPath('clinic.canWrite', true);
+
+        $clinic = Clinic::factory()->trialExpired()->create();
+        $this->actingAsMember($this->member($clinic));
+        $this->push($this->change('patients', $this->cid(), $this->patientData()))->assertOk();
+    }
+
+    public function test_standalone_mode_still_honours_suspension(): void
+    {
+        config(['app.standalone' => true]);
+        $clinic = Clinic::factory()->create(['status' => 'suspended']);
+
+        $this->assertSame('suspended', $clinic->subscriptionState());
+        $this->assertFalse($clinic->canWrite());
+    }
+
     public function test_patient_limit_is_enforced(): void
     {
         Plan::where('slug', 'basic')->update(['max_patients' => 1]);

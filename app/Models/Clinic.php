@@ -68,6 +68,9 @@ class Clinic extends Model
         if ($this->status === 'suspended') {
             return 'suspended';
         }
+        if (config('app.standalone')) {
+            return 'active';
+        }
         if ($this->status === 'active' && $this->subscription_ends_at?->isFuture()) {
             return 'active';
         }

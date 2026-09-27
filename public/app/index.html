@@ -115,7 +115,11 @@
 
     <nav id="nav" class="p-3 space-y-1 flex-1 overflow-y-auto"></nav>
 
-    <div class="px-3 pb-2">
+    <div class="px-3 pb-2 space-y-1">
+      <button id="installBtn" onclick="installApp()" title="تثبيت البرنامج على الجهاز" class="hidden w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl2 bg-white/5 hover:bg-white/10 text-right transition">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-4 h-4 text-white/50 shrink-0"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        <span class="block text-xs text-white/85 truncate">ثبّت البرنامج على الجهاز</span>
+      </button>
       <button onclick="manualSync()" title="مزامنة الآن" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl2 bg-white/5 hover:bg-white/10 text-right transition">
         <span id="syncDot" class="w-2 h-2 rounded-full bg-mint shrink-0"></span>
         <span class="min-w-0 flex-1">
@@ -2899,6 +2903,26 @@ function renderSyncStatus(st){
 function manualSync(){
   if (!Sync.status.online) return toast('مفيش نت دلوقتي — التعديلات محفوظة على الجهاز','warn');
   Sync.sync().then(()=>{ if (!Sync.status.error) toast('كل البيانات متزامنة'); });
+}
+
+/* ── install as a desktop/mobile app (Chrome/Edge); hidden once installed or inside the desktop shell ── */
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installPrompt = e;
+  document.getElementById('installBtn').classList.remove('hidden');
+});
+window.addEventListener('appinstalled', () => {
+  installPrompt = null;
+  document.getElementById('installBtn').classList.add('hidden');
+  toast('البرنامج اتثبت — تقدر تفتحه من سطح المكتب');
+});
+async function installApp(){
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  document.getElementById('installBtn').classList.add('hidden');
 }
 const REJECT_MSG = {
   plan_limit_patients: 'وصلت للحد الأقصى من المرضى في باقتك — المريض الجديد ما اتسجلش على السيرفر.',

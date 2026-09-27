@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>عيادتي</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #EEF3F7; color: #0A2E45;
+         font-family: "Segoe UI", Tahoma, sans-serif; }
+  .card { width: min(460px, calc(100% - 32px)); background: #fff; border: 1px solid #dde6ee; border-radius: 16px;
+          padding: 28px; box-shadow: 0 8px 30px rgba(10, 46, 69, .08); }
+  h1 { font-size: 1.25rem; margin: 0 0 8px; }
+  p { margin: 0 0 18px; color: #4b6275; line-height: 1.7; font-size: .95rem; }
+  .reason { font-size: .8rem; color: #9aa9b5; direction: ltr; text-align: left; margin-top: -10px; }
+  label { display: block; font-size: .85rem; margin-bottom: 6px; }
+  input { width: 100%; padding: 10px 12px; border: 1px solid #cfdbe5; border-radius: 10px; font-size: .95rem; direction: ltr; }
+  .row { display: flex; gap: 8px; margin-top: 14px; }
+  button { flex: 1; padding: 10px; border-radius: 10px; border: 0; font-size: .95rem; cursor: pointer; }
+  .primary { background: #0A2E45; color: #fff; }
+  .ghost { background: #EEF3F7; color: #0A2E45; }
+  .err { color: #c0392b; font-size: .85rem; min-height: 1.2em; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>مش قادر أوصل للسيرفر</h1>
+  <p>اتأكد إن النت شغال وإن عنوان السيرفر صح. بعد أول تشغيل ناجح البرنامج بيفتح من غير نت.</p>
+  <p class="reason" id="reason"></p>
+  <label for="server">عنوان السيرفر</label>
+  <input id="server" placeholder="https://clinic.example.com" autocomplete="off">
+  <div class="err" id="err"></div>
+  <div class="row">
+    <button class="primary" id="save">حفظ واتصال</button>
+    <button class="ghost" id="retry">إعادة المحاولة</button>
+  </div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  document.getElementById('server').value = q.get('server') || '';
+  document.getElementById('reason').textContent = q.get('reason') || '';
+  document.getElementById('save').onclick = async () => {
+    const ok = await window.desktop.setServer(document.getElementById('server').value);
+    if (!ok) document.getElementById('err').textContent = 'العنوان لازم يبدأ بـ http:// أو https://';
+  };
+  document.getElementById('retry').onclick = () => window.desktop.retry();
+</script>
+</body>
+</html>
