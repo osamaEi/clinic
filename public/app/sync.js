@@ -12,7 +12,7 @@
   'use strict';
 
   const API = '/api';
-  const ENTITIES = ['patients', 'appts', 'records', 'treatments', 'files', 'drugs', 'labs'];
+  const ENTITIES = ['patients', 'appts', 'records', 'treatments', 'files', 'drugs', 'labs', 'expenses', 'budgets'];
   const PUSH_BATCH = 200;
   const PULL_EVERY_MS = 10000;
   const ACCOUNT_EVERY_CYCLES = 15;

@@ -3,7 +3,9 @@
 namespace App\Sync;
 
 use App\Models\Appointment;
+use App\Models\Budget;
 use App\Models\Drug;
+use App\Models\Expense;
 use App\Models\LabTest;
 use App\Models\MedicalRecord;
 use App\Models\Patient;
@@ -123,6 +125,29 @@ final class SyncRegistry
                     'name' => 'required|string|max:255',
                     'kind' => 'nullable|in:تحليل,أشعة,إجراء',
                     'note' => 'nullable|string|max:255',
+                ],
+            ],
+            // What the clinic spends; income is the paid appointments.
+            'expenses' => [
+                'model' => Expense::class,
+                'roles' => ['doctor', 'secretary'],
+                'fields' => ['cat' => 'category', 'amount' => 'amount', 'date' => 'date', 'method' => 'method', 'note' => 'note'],
+                'rules' => [
+                    'cat' => 'required|string|max:60',
+                    'amount' => 'required|numeric|min:0|max:9999999999',
+                    'date' => 'required|date',
+                    'method' => 'nullable|string|max:20',
+                    'note' => 'nullable|string|max:255',
+                ],
+            ],
+            // Monthly spending limit per expense category, set by the doctor.
+            'budgets' => [
+                'model' => Budget::class,
+                'roles' => ['doctor'],
+                'fields' => ['cat' => 'category', 'amount' => 'amount'],
+                'rules' => [
+                    'cat' => 'required|string|max:60',
+                    'amount' => 'required|numeric|min:0|max:9999999999',
                 ],
             ],
             // File content is uploaded through /api/files; sync only carries metadata edits and deletes.

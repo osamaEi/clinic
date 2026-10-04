@@ -147,6 +147,33 @@ class SyncTest extends ApiTestCase
         $this->getJson('/api/sync?since=0')->assertJsonCount(1, 'changes.labs')->assertJsonPath('changes.labs.0.kind', 'تحليل');
     }
 
+    public function test_staff_record_expenses_but_only_the_doctor_sets_budget_limits(): void
+    {
+        $clinic = $this->makeClinic();
+        $this->actingAsMember($this->member($clinic, 'secretary', false));
+        $this->push(
+            $this->change('expenses', $this->cid(), ['cat' => 'إيجار', 'amount' => 6000, 'date' => '2026-10-01T00:00:00', 'method' => 'تحويل', 'note' => '']),
+            $this->change('expenses', $this->cid(), ['cat' => 'إيجار', 'amount' => -5, 'date' => '2026-10-01']),
+            $this->change('budgets', $this->cid(), ['cat' => 'إيجار', 'amount' => 6000]),
+        )->assertJsonPath('results.0.status', 'ok')
+            ->assertJsonPath('results.0.row.date', '2026-10-01')
+            ->assertJsonPath('results.0.row.amount', 6000)
+            ->assertJsonPath('results.1.status', 'rejected')
+            ->assertJsonPath('results.2.error', 'forbidden');
+
+        $this->actingAsMember($this->member($clinic, 'nurse', false));
+        $this->push($this->change('expenses', $this->cid(), ['cat' => 'صيانة', 'amount' => 100, 'date' => '2026-10-02']))
+            ->assertJsonPath('results.0.error', 'forbidden');
+
+        $this->actingAsMember($this->member($clinic));
+        $this->push($this->change('budgets', $this->cid(), ['cat' => 'إيجار', 'amount' => 6500.5]))
+            ->assertJsonPath('results.0.status', 'ok');
+        $this->getJson('/api/sync?since=0')
+            ->assertJsonCount(1, 'changes.expenses')
+            ->assertJsonPath('changes.expenses.0.cat', 'إيجار')
+            ->assertJsonPath('changes.budgets.0.amount', 6500.5);
+    }
+
     public function test_invalid_rows_are_rejected_individually(): void
     {
         $clinic = $this->makeClinic();

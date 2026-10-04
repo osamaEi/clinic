@@ -203,7 +203,7 @@ const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return
 const DB = {
   clinic: { name:'', spec:'', doctor:'', phone:'', address:'', open:'10:00', close:'22:00' },
   fees: { 'كشف':300, 'استشارة':200, 'متابعة':150 },
-  patients: [], appts: [], records: [], treatments: [], files: [], drugs: [], labs: [],
+  patients: [], appts: [], records: [], treatments: [], files: [], drugs: [], labs: [], expenses: [], budgets: [],
 };
 
 /* ═══════════════ الخطوط ═══════════════ */
@@ -280,6 +280,7 @@ const ICON = {
   reports:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H2a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1.1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V2a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H22a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1"/>',
   queue:'<path d="M4 6h16M4 12h10M4 18h7"/><circle cx="19" cy="16" r="3"/>',
+  budget:'<path d="M20 7V5a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V6"/><path d="M17 14h.01"/>',
 };
 const NAV = {
   nurse: [['patients','البحث وتسجيل بيانات المرضى','patients'],['queue','لوحة الانتظار','queue'],['billing','التحصيل','billing']],
@@ -288,6 +289,7 @@ const NAV = {
     ['queue','لوحة الانتظار','queue'],
     ['appts','المواعيد','appts'],
     ['billing','التحصيل','billing'],
+    ['budget','الميزانية','budget'],
     ['patients','ملفات المرضى','patients'],
 
     ['settings','الإعدادات','settings'],
@@ -298,6 +300,7 @@ const NAV = {
     ['appts','حجز المواعيد','appts'],
     ['patients','سجل المرضى','patients'],
     ['billing','التحصيل والفواتير','billing'],
+    ['budget','المصروفات والميزانية','budget'],
 
     ['settings','الإعدادات','settings'],
   ]
@@ -353,7 +356,7 @@ function go(page){
     : page==='exam' ? 'كشف — ' + patient(CURRENT_PID).name : (item ? item[1] : '');
   $('#pageDate').textContent = page==='patient' ? 'الملف الطبي الكامل' : page==='exam' ? 'شاشة الكشف' : fmtDate(iso(TODAY));
   const R = { dashboard: ROLE==='doctor'?docDash:secDash, appts:apptsPage, patients:patientsPage,
-              records:recordsPage, billing:billingPage, reports:reportsPage, settings:settingsPage,
+              records:recordsPage, billing:billingPage, budget:budgetPage, reports:reportsPage, settings:settingsPage,
               patient:ROLE==='nurse'?nursePatientPage:patientPage, queue:queuePage, exam:examPage };
   $('#view').innerHTML = `<div class="fade">${(R[page]||docDash)()}</div>`;
   if (page==='exam') { renderRx(); renderPending(); renderLabChips(); }
@@ -835,6 +838,200 @@ function billingPage(){
       </table></div>` : ''}
     </section>
   </div>`;
+}
+
+/* ═══════════════ الميزانية ═══════════════ */
+// الإيراد = الكشوفات المدفوعة (بتاريخ الموعد) · المصروفات بتتسجل هنا · حد الصرف شهري لكل بند والدكتور بس اللي يحدده
+const EXP_CATS = ['إيجار','مرتبات','كهرباء ومياه','مستلزمات طبية','أدوات مكتبية ونظافة','صيانة','دعاية وتسويق','إنترنت وتليفون','أخرى'];
+const PAY_METHODS = ['كاش','فيزا','تحويل'];
+let budMonth = null, BUD_CATS = [], EXP_EDIT = null;
+const thisMonth = () => iso(TODAY).slice(0,7);
+const shiftMonth = (m, n) => { const [y,mo] = m.split('-').map(Number); return iso(new Date(y, mo-1+n, 1)).slice(0,7); };
+const fmtMonth = m => new Date(m+'-01T00:00:00').toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
+const sumAmount = xs => xs.reduce((s,x)=>s+Number(x.amount||0),0);
+const monthIncome = m => DB.appts.filter(a=>a.paid && a.status!=='ملغي' && a.date.startsWith(m)).reduce((s,a)=>s+Number(a.fee||0),0);
+const monthExpenses = m => DB.expenses.filter(x=>x.date.startsWith(m));
+const budgetOf = cat => DB.budgets.find(b=>b.cat===cat);
+const expenseCats = () => [...new Set([...EXP_CATS, ...DB.budgets.map(b=>b.cat), ...DB.expenses.map(x=>x.cat)])];
+
+function budgetPage(){
+  const m = budMonth || thisMonth(), isDoc = ROLE==='doctor';
+  const exps = monthExpenses(m).sort((a,b)=>b.date.localeCompare(a.date) || b.id-a.id);
+  const income = monthIncome(m), spent = sumAmount(exps), net = income - spent, limit = sumAmount(DB.budgets);
+  const cats = expenseCats().map(cat=>({ cat, spent: sumAmount(exps.filter(x=>x.cat===cat)), limit: Number(budgetOf(cat)?.amount||0) }))
+    .filter(x=>x.spent || x.limit).sort((a,b)=>b.spent-a.spent || b.limit-a.limit);
+  BUD_CATS = cats.map(x=>x.cat);
+  const months = [...Array(6)].map((_,i)=>shiftMonth(m, i-5)).map(k=>({ k, inc:monthIncome(k), exp:sumAmount(monthExpenses(k)) }));
+  const top = Math.max(1, ...months.flatMap(x=>[x.inc, x.exp]));
+  const over = cats.filter(x=>x.limit && x.spent > x.limit);
+
+  return `
+  <div class="space-y-6">
+    <div class="bg-white border border-line rounded-xl2 shadow-card p-4 flex flex-wrap items-end gap-3">
+      <div><label class="lbl" for="budMonth">الشهر</label>
+        <div class="flex items-center gap-1">
+          <button onclick="budMonth=shiftMonth('${m}',-1);go('budget')" class="border border-line rounded-lg w-10 h-[42px] hover:border-primary" aria-label="الشهر اللي فات">›</button>
+          <input id="budMonth" type="month" value="${m}" onchange="budMonth=this.value||null;go('budget')" class="field w-44 num">
+          <button onclick="budMonth=shiftMonth('${m}',1);go('budget')" class="border border-line rounded-lg w-10 h-[42px] hover:border-primary" aria-label="الشهر الجاي">‹</button>
+        </div></div>
+      ${m===thisMonth() ? '' : `<button onclick="budMonth=null;go('budget')" class="text-sm text-primary px-3 py-2.5 hover:underline">رجوع للشهر الحالي</button>`}
+      <div class="mr-auto flex gap-2 flex-wrap">
+        ${isDoc ? `<button onclick="limitModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2 hover:border-primary hover:text-primary">حدود الصرف</button>` : ''}
+        <button onclick="expenseModal()" class="bg-primary text-white text-sm font-medium px-4 py-2.5 rounded-xl2 hover:bg-primaryd">+ تسجيل مصروف</button>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      ${statCard('الإيراد', money(income), 'الكشوفات المحصّلة في '+fmtMonth(m), 'billing', 'bg-mint/10 text-mint')}
+      ${statCard('المصروفات', money(spent), `${exps.length} مصروف`, 'budget', 'bg-rose/10 text-rose')}
+      ${statCard(net >= 0 ? 'صافي الربح' : 'خسارة', money(Math.abs(net)), income ? `هامش ${Math.round(net/income*100)}%` : 'جنيه', 'reports', net >= 0 ? 'bg-primary/10 text-primary' : 'bg-rose/10 text-rose')}
+      ${limit
+        ? statCard(spent > limit ? 'متجاوز الميزانية' : 'متبقي من الميزانية', money(Math.abs(limit-spent)), `من ${money(limit)} ج حد الشهر`, 'budget', spent > limit ? 'bg-rose/10 text-rose' : 'bg-amber/10 text-amber')
+        : statCard('الميزانية', '—', isDoc ? 'حدّد حدود صرف للبنود' : 'لسه الدكتور ما حددش حدود صرف', 'budget', 'bg-amber/10 text-amber')}
+    </div>
+
+    ${over.length ? `<div class="bg-rose/5 border border-rose/30 text-rose text-sm rounded-xl2 p-4">
+      عدّيت حد الصرف في: ${over.map(x=>`<b>${esc(x.cat)}</b> (<span class="num">${money(x.spent-x.limit)}</span> ج زيادة)`).join('، ')}</div>` : ''}
+
+    <div class="grid lg:grid-cols-5 gap-6">
+      <section class="lg:col-span-2 bg-white border border-line rounded-xl2 shadow-card p-6">
+        <div class="flex items-center justify-between gap-3">
+          <div><h2 class="font-semibold">الصرف حسب البند</h2>
+            <p class="text-xs text-muted mt-0.5">المصروف من حد الصرف الشهري</p></div>
+        </div>
+        ${cats.length ? `<div class="mt-5 space-y-4">
+          ${cats.map((x,i)=>`<div class="flex items-end gap-2">
+            <div class="flex-1 min-w-0">${usageBar(esc(x.cat), x.spent, x.limit, 'ج')}
+              ${x.limit && x.spent > x.limit ? `<p class="text-[.7rem] text-rose mt-1">زيادة <span class="num">${money(x.spent-x.limit)}</span> ج</p>` : ''}</div>
+            ${isDoc ? `<button onclick="limitModal(${i})" class="text-[.7rem] text-muted hover:text-primary px-1 pb-0.5">${x.limit ? 'تعديل' : 'حد'}</button>` : ''}
+          </div>`).join('')}
+        </div>` : `<p class="text-sm text-muted text-center mt-8">مفيش مصروفات ولا حدود صرف في الشهر ده.</p>`}
+      </section>
+
+      <section class="lg:col-span-3 bg-white border border-line rounded-xl2 shadow-card p-6">
+        <h2 class="font-semibold">آخر ٦ شهور</h2>
+        <p class="text-xs text-muted mt-0.5"><span class="inline-block w-2 h-2 rounded-full bg-mint align-middle"></span> إيراد
+          · <span class="inline-block w-2 h-2 rounded-full bg-rose align-middle"></span> مصروفات</p>
+        <div class="mt-6 flex items-end gap-3 h-44">
+          ${months.map(x=>`
+            <button onclick="budMonth='${x.k}';go('budget')" class="flex-1 h-full flex flex-col justify-end items-center gap-2 group" title="صافي ${money(x.inc-x.exp)} ج">
+              <div class="w-full flex-1 flex items-end justify-center gap-1">
+                <div class="w-1/3 rounded-t-md ${x.k===m?'bg-mint':'bg-mint/40'}" style="height:${Math.max(2, x.inc/top*100)}%"></div>
+                <div class="w-1/3 rounded-t-md ${x.k===m?'bg-rose':'bg-rose/40'}" style="height:${Math.max(2, x.exp/top*100)}%"></div>
+              </div>
+              <span class="text-[.7rem] num ${x.inc-x.exp<0?'text-rose':'text-muted'} opacity-0 group-hover:opacity-100 transition">${money(x.inc-x.exp)}</span>
+              <span class="text-[.7rem] ${x.k===m?'text-ink font-medium':'text-muted'}">${new Date(x.k+'-01T00:00:00').toLocaleDateString('ar-EG',{month:'short'})}</span>
+            </button>`).join('')}
+        </div>
+      </section>
+    </div>
+
+    <section class="bg-white border border-line rounded-xl2 shadow-card overflow-hidden">
+      <div class="p-5 border-b border-line flex items-center justify-between flex-wrap gap-3">
+        <div><h2 class="font-semibold">مصروفات ${fmtMonth(m)}</h2>
+          <p class="text-xs text-muted mt-0.5">${PAY_METHODS.map(p=>`${p}: <span class="num">${money(sumAmount(exps.filter(x=>x.method===p)))}</span> ج`).join(' · ')}</p></div>
+        <span class="num text-rose font-bold text-lg">${money(spent)} ج</span>
+      </div>
+      ${exps.length ? `<div class="overflow-x-auto"><table class="w-full text-right">
+        <thead><tr class="bg-canvas/70 text-xs text-muted">
+          ${['التاريخ','البند','ملاحظة','طريقة الدفع','المبلغ',''].map(h=>`<th class="py-2.5 px-4 font-medium">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${exps.map(x=>`<tr class="border-t border-line hover:bg-canvas/60">
+          <td class="py-3 px-4 num text-sm text-muted whitespace-nowrap">${fmtShort(x.date)}</td>
+          <td class="py-3 px-4 text-sm font-medium whitespace-nowrap">${esc(x.cat)}</td>
+          <td class="py-3 px-4 text-sm text-muted">${esc(x.note) || '—'}</td>
+          <td class="py-3 px-4"><span class="text-xs px-2.5 py-1 rounded-full ${x.method==='كاش'?'bg-mint/10 text-mint':'bg-primary/10 text-primary'}">${esc(x.method||'—')}</span></td>
+          <td class="py-3 px-4 num text-sm font-semibold whitespace-nowrap">${money(x.amount)} ج</td>
+          <td class="py-3 px-4 text-left whitespace-nowrap">
+            <button onclick="expenseModal(${x.id})" class="text-xs border border-line px-2.5 py-1.5 rounded-lg hover:border-primary hover:text-primary">تعديل</button>
+            <button onclick="deleteExpense(${x.id})" class="text-xs text-muted hover:text-rose px-2">حذف</button></td>
+        </tr>`).join('')}</tbody>
+        <tfoot><tr class="border-t-2 border-line bg-canvas/50">
+          <td class="py-3 px-4 text-sm font-semibold" colspan="4">الإجمالي</td>
+          <td class="py-3 px-4 num font-bold text-rose whitespace-nowrap">${money(spent)} ج</td><td></td></tr></tfoot>
+      </table></div>` : `<p class="p-10 text-center text-sm text-muted">مفيش مصروفات متسجلة في ${fmtMonth(m)}.</p>`}
+    </section>
+  </div>`;
+}
+
+function expenseModal(id){
+  const e = id ? DB.expenses.find(x=>x.id===id) : null, m = budMonth || thisMonth();
+  EXP_EDIT = e ? e.id : null;
+  openModal(`${modalHead(e ? 'تعديل مصروف' : 'تسجيل مصروف', 'أي فلوس خرجت من العيادة — إيجار، مرتبات، مستلزمات…')}
+    <div class="p-5 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="lbl" for="exCat">البند</label>
+          <input id="exCat" list="exCats" class="field" value="${esc(e?.cat||'')}" placeholder="اختار أو اكتب بند">
+          <datalist id="exCats">${expenseCats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
+        <div><label class="lbl" for="exAmount">المبلغ (جنيه)</label>
+          <input id="exAmount" type="number" min="0" step="0.01" class="field num" value="${e?.amount ?? ''}"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="lbl" for="exDate">التاريخ</label>
+          <input id="exDate" type="date" class="field num" value="${e?.date || (m===thisMonth() ? iso(TODAY) : m+'-01')}"></div>
+        <div><label class="lbl" for="exMethod">طريقة الدفع</label><select id="exMethod" class="field">
+          ${PAY_METHODS.map(p=>`<option ${(e?.method||'كاش')===p?'selected':''}>${p}</option>`).join('')}</select></div>
+      </div>
+      <div><label class="lbl" for="exNote">ملاحظة</label>
+        <input id="exNote" class="field" value="${esc(e?.note||'')}" placeholder="اختياري — مثلاً: إيجار شهر أكتوبر"></div>
+    </div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>
+      <button onclick="saveExpense()" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">${e ? 'حفظ التعديل' : 'تسجيل'}</button>
+    </div>`);
+}
+function saveExpense(){
+  const cat = $('#exCat').value.trim(), amount = Number($('#exAmount').value), date = $('#exDate').value;
+  if (!cat) return toast('اختار بند المصروف','err');
+  if (!(amount > 0)) return toast('اكتب مبلغ صحيح','err');
+  if (!date) return toast('اختار تاريخ المصروف','err');
+  const data = { cat, amount, date, method:$('#exMethod').value, note:$('#exNote').value.trim() };
+  if (EXP_EDIT) Object.assign(DB.expenses.find(x=>x.id===EXP_EDIT), data);
+  else DB.expenses.push({ id:Sync.newId(), ...data });
+  const month = date.slice(0,7), cap = Number(budgetOf(cat)?.amount||0);
+  const used = sumAmount(monthExpenses(month).filter(x=>x.cat===cat));
+  closeModal();
+  if (cap && used > cap) toast(`اتسجل — بس كده عدّيت حد ${cat} بـ ${money(used-cap)} جنيه`,'warn');
+  else toast(EXP_EDIT ? 'المصروف اتعدّل' : 'المصروف اتسجل');
+  EXP_EDIT = null; budMonth = month===thisMonth() ? null : month; go('budget');
+}
+function deleteExpense(id){
+  const x = DB.expenses.find(e=>e.id===id);
+  if (!x || !confirm(`تمسح مصروف ${x.cat} (${money(x.amount)} ج)؟`)) return;
+  DB.expenses = DB.expenses.filter(e=>e.id!==id);
+  toast('المصروف اتمسح','warn'); go('budget');
+}
+
+function limitModal(i){
+  if (ROLE!=='doctor') return;
+  const cat = i===undefined ? '' : BUD_CATS[i], b = cat ? budgetOf(cat) : null;
+  openModal(`${modalHead('حد الصرف الشهري', 'أقصى مبلغ تصرفه على البند في الشهر — اتركه فاضي أو صفر عشان تشيل الحد')}
+    <div class="p-5 space-y-4">
+      <div><label class="lbl" for="lmCat">البند</label>
+        <input id="lmCat" list="lmCats" class="field" value="${esc(cat)}" ${cat?'readonly':''} placeholder="اختار أو اكتب بند">
+        <datalist id="lmCats">${expenseCats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
+      <div><label class="lbl" for="lmAmount">الحد الشهري (جنيه)</label>
+        <input id="lmAmount" type="number" min="0" step="0.01" class="field num" value="${b?.amount ?? ''}"></div>
+      ${DB.budgets.length ? `<div class="border border-line rounded-xl2 divide-y divide-line text-sm">
+        ${DB.budgets.slice().sort((a,b)=>b.amount-a.amount).map(x=>`<div class="flex justify-between px-3 py-2"><span>${esc(x.cat)}</span><span class="num">${money(x.amount)} ج</span></div>`).join('')}
+        <div class="flex justify-between px-3 py-2 font-semibold bg-canvas/50"><span>إجمالي الميزانية الشهرية</span><span class="num">${money(sumAmount(DB.budgets))} ج</span></div>
+      </div>` : ''}
+    </div>
+    <div class="p-5 border-t border-line flex gap-3 justify-end">
+      <button onclick="closeModal()" class="border border-line text-sm px-4 py-2.5 rounded-xl2">إلغاء</button>
+      <button onclick="saveLimit()" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-xl2 hover:bg-primaryd">حفظ</button>
+    </div>`);
+}
+function saveLimit(){
+  const cat = $('#lmCat').value.trim(), amount = Number($('#lmAmount').value || 0);
+  if (!cat) return toast('اختار البند','err');
+  if (!(amount >= 0)) return toast('اكتب مبلغ صحيح','err');
+  const b = budgetOf(cat);
+  if (amount > 0 && b) b.amount = amount;
+  else if (amount > 0) DB.budgets.push({ id:Sync.newId(), cat, amount });
+  else if (b) DB.budgets = DB.budgets.filter(x=>x.id!==b.id);
+  else return closeModal();
+  closeModal(); toast(amount > 0 ? `حد ${cat}: ${money(amount)} جنيه في الشهر` : `اتشال حد ${cat}`); go('budget');
 }
 
 /* ═══════════════ التقارير ═══════════════ */
